@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbanplatform.com/agent-harness/schemas/0.2/ledger-entry.schema.json",
+  "title": "Agent Harness Profile 0.2 write-ledger entry",
+  "description": "One entry of the exactly-once write ledger, keyed by (scope.tenant, scope.principal, scope.operation, idempotency_key). In-flight states (intent, approved) carry response null; terminal states (executed, denied, expired, failed) carry the stored response that is replayed for a repeated request. Requirement levels in property descriptions follow the profile: Required, Conditionally Required, Recommended, Opt-In.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["idempotency_key", "scope", "fingerprint", "task_id", "run_id", "state", "approval_request_id", "response", "created_at", "updated_at", "retain_until"],
+  "properties": {
+    "$schema": {
+      "description": "Opt-In. URI of this JSON Schema. When present it MUST be exactly this schema's $id.",
+      "const": "https://orbanplatform.com/agent-harness/schemas/0.2/ledger-entry.schema.json"
+    },
+    "idempotency_key": {
+      "description": "Required. Idempotency key supplied with the write (HTTP Idempotency-Key header as a Structured Field String, or MCP _meta[\"com.orbanplatform/idempotency-key\"]).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[\\x20-\\x7E]+$"
+    },
+    "scope": {
+      "description": "Required. Key scope. The same key in a different scope is a different entry.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant", "principal", "operation"],
+      "properties": {
+        "tenant": { "description": "Required. Tenant identifier.", "type": "string", "minLength": 1, "maxLength": 256 },
+        "principal": { "description": "Required. Principal id of the caller (the agent).", "type": "string", "minLength": 1, "maxLength": 256 },
+        "operation": { "description": "Required. Operation, normally the tool name.", "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "fingerprint": {
+      "description": "Required. Lowercase hex SHA-256 of JCS(arguments) of the first request with this key. A later request with the same key and a different fingerprint is rejected with 422.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "task_id": {
+      "description": "Required. Task that first used the key. The same key from a different task is rejected with 409.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "run_id": {
+      "description": "Required. Run that first used the key.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "state": {
+      "description": "Required. intent (recorded, not yet approved or executed), approved, executed, denied, expired or failed.",
+      "enum": ["intent", "approved", "executed", "denied", "expired", "failed"]
+    },
+    "approval_request_id": {
+      "description": "Required (may be null). id of the approval request gating this write, or null if none was needed (for example over_limit below the limit).",
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "response": {
+      "description": "Conditionally Required: an object in terminal states (the stored response, for denied, expired and failed an RFC 9457 problem details object), null in intent and approved.",
+      "type": ["object", "null"]
+    },
+    "created_at": {
+      "description": "Required. RFC 3339 date-time the entry was created.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "description": "Required. RFC 3339 date-time of the last state change.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "retain_until": {
+      "description": "Required. RFC 3339 date-time until which the entry is kept. At least 24 hours after the entry reached a terminal state; the retention period MUST be published by the implementation.",
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "type": "object", "properties": { "state": { "enum": ["executed", "denied", "expired", "failed"] } }, "required": ["state"] },
+      "then": { "properties": { "response": { "type": "object" } } },
+      "else": { "properties": { "response": { "type": "null" } } }
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Orban Platform Inc.
 //
-// Recipe lint rules (beyond JSON Schema). Pure functions over parsed files;
+// Template lint rules (beyond JSON Schema). Pure functions over parsed files;
 // file-system checks (digests, unlisted files) and Cedar validation live in
 // scripts/conformance.mjs.
 //
-// lintRecipe(bundle) returns one result per rule:
+// lintTemplate(bundle) returns one result per rule:
 //   { rule, level: 'error'|'warning', status: 'pass'|'fail'|'warn'|'skip', messages: string[] }
 // A rule is skipped when a file it needs is missing or failed to parse or
 // validate (bundle.ok[file] === false).
@@ -15,7 +15,7 @@ import { classify } from './classify.mjs';
 const AGENTSPEC_VERSION = '26.3.1';
 const HARNESS_LINK_KEY = 'com.orbanplatform/harness';
 // Intersection of OpenAI function names, Claude API tool names and the MCP
-// tool-name guidance. Recipes use snake_case (mail_send).
+// tool-name guidance. Templates use snake_case (mail_send).
 export const TOOL_NAME_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
 // ---------------------------------------------------------------------------
@@ -90,15 +90,15 @@ const SKILL_FIELDS = new Set(['name', 'description', 'license', 'allowed-tools',
 
 /** @type {Array<{id: string, level: 'error'|'warning', needs: string[], check: (b: any) => string[]}>} */
 export const RULES = [
-  // recipe.json
+  // template.json
   {
-    id: 'recipe.unique-paths',
+    id: 'template.unique-paths',
     level: 'error',
-    needs: ['recipe'],
-    check: ({ recipe }) => {
+    needs: ['template'],
+    check: ({ template }) => {
       const seen = new Set();
       const dup = [];
-      for (const f of arr(recipe.files)) {
+      for (const f of arr(template.files)) {
         if (seen.has(f.path)) dup.push(`path ${f.path} is listed more than once`);
         seen.add(f.path);
       }
@@ -328,11 +328,11 @@ export const RULES = [
 
   // acceptance.json
   {
-    id: 'acceptance.recipe-id',
+    id: 'acceptance.template-id',
     level: 'error',
-    needs: ['recipe', 'acceptance'],
-    check: ({ recipe, acceptance }) =>
-      acceptance.recipe_id === recipe.id ? [] : [`recipe_id ${JSON.stringify(acceptance.recipe_id)} does not equal recipe.json id ${JSON.stringify(recipe.id)}`],
+    needs: ['template', 'acceptance'],
+    check: ({ template, acceptance }) =>
+      acceptance.template_id === template.id ? [] : [`template_id ${JSON.stringify(acceptance.template_id)} does not equal template.json id ${JSON.stringify(template.id)}`],
   },
   {
     id: 'acceptance.sample-ids-unique',
@@ -455,17 +455,17 @@ export const RULES = [
     check: ({ skills }) =>
       arr(skills)
         .filter((s) => arr(s.files).some((f) => f === 'scripts' || f.startsWith('scripts/')))
-        .map((s) => `${s.path}: skills in a recipe are instruction-only; remove the scripts/ directory`),
+        .map((s) => `${s.path}: skills in a template are instruction-only; remove the scripts/ directory`),
   },
 ];
 
 /**
  * Run every lint rule.
- * @param {{recipe?: object, agent?: object, harness?: object, acceptance?: object,
+ * @param {{template?: object, agent?: object, harness?: object, acceptance?: object,
  *          skills?: Array<{path: string, dir: string, content: string, files: string[]}>,
  *          ok?: Record<string, boolean>}} bundle
  */
-export function lintRecipe(bundle) {
+export function lintTemplate(bundle) {
   const ok = bundle.ok ?? {};
   return RULES.map((r) => {
     const missing = r.needs.filter((n) => bundle[n] === undefined || bundle[n] === null || ok[n] === false);

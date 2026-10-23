@@ -1,0 +1,429 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbanplatform.com/agent-harness/schemas/0.2/harness.schema.json",
+  "title": "Agent Harness Profile 0.2 harness sidecar (harness.json)",
+  "description": "Sidecar to a pure Oracle Agent Spec 26.3.1 agent.json. Six chapters: role, knowledge, tools, workflow, boundaries, model. Linked to agent.json by agent_ref (the Agent component id). Schema validation is necessary but not sufficient: the profile's lint rules (for example: an unclassified tool is a write tool; a write tool never has approval never; on_timeout is deny; requester_may_approve is false) are checked by the conformance runner. Requirement levels in property descriptions follow the profile: Required, Conditionally Required, Recommended, Opt-In.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_version", "agent_ref", "role", "knowledge", "tools", "workflow", "boundaries", "model"],
+  "properties": {
+    "$schema": {
+      "description": "Recommended. URI of this JSON Schema. When present it MUST be exactly this schema's $id.",
+      "const": "https://orbanplatform.com/agent-harness/schemas/0.2/harness.schema.json"
+    },
+    "profile_version": {
+      "description": "Required. Profile version (semver). MUST be 0.1.0.",
+      "const": "0.2.0"
+    },
+    "agent_ref": {
+      "description": "Required. The id of the Agent Spec Agent component in agent.json that this sidecar describes.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "role": {
+      "description": "Required. Chapter 1, role and voice: who the agent is, for whom it works and to whom it reports.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "duties", "acts_on_behalf_of", "reports_to"],
+      "properties": {
+        "title": {
+          "description": "Required. Job title of the agent, for example Reception.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "duties": {
+          "description": "Required. At least one duty, each a short plain sentence.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "voice": {
+          "description": "Recommended. Tone and register the agent uses, for example formal, concise.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "acts_on_behalf_of": {
+          "description": "Required. The organisation or person the agent acts for (use fictional names such as Example Co. in published examples).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reports_to": {
+          "description": "Required. Non-empty human role or principal id that receives the agent's reports and escalations.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "locale": {
+          "description": "Recommended. BCP 47 language tag the agent writes in.",
+          "$ref": "#/$defs/bcp47"
+        }
+      }
+    },
+    "knowledge": {
+      "description": "Required (may be empty). Chapter 2, knowledge sources the agent may read. Writes happen only through tools.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "kind", "access", "citation"],
+        "properties": {
+          "name": {
+            "description": "Required. Short unique name of the source.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "description": {
+            "description": "Recommended. What the source contains and how current it is.",
+            "type": "string",
+            "maxLength": 1000
+          },
+          "kind": {
+            "description": "Required. Type of source.",
+            "enum": ["document", "database", "api", "web"]
+          },
+          "access": {
+            "description": "Required. Access mode. Only read is defined in 0.1.",
+            "const": "read"
+          },
+          "citation": {
+            "description": "Required. Whether answers drawn from this source must cite it.",
+            "enum": ["required", "recommended", "none"]
+          }
+        }
+      }
+    },
+    "tools": {
+      "description": "Required (may be empty). Chapter 3, system permissions: exactly one entry per Agent Spec tool in agent.json, matched by tool name, and no others.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" }
+    },
+    "workflow": {
+      "description": "Required. Chapter 4, work steps.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["triggers", "steps", "on_failure"],
+      "properties": {
+        "triggers": {
+          "description": "Required. At least one way a run starts.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "description"],
+            "properties": {
+              "kind": {
+                "description": "Required. Trigger type.",
+                "enum": ["event", "schedule", "message", "manual"]
+              },
+              "description": {
+                "description": "Required. Plain description of the trigger, for example: a new enquiry arrives from the website form.",
+                "$ref": "#/$defs/sentence"
+              }
+            }
+          }
+        },
+        "steps": {
+          "description": "Required. Ordered work steps, each a short plain sentence.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "on_failure": {
+          "description": "Required. What the agent does when a step fails: stop and report, or retry (idempotently) and then report.",
+          "enum": ["stop_and_report", "retry_then_report"]
+        },
+        "handoffs": {
+          "description": "Recommended (may be empty). Situations in which the agent hands the task to a human or another agent.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["to", "when"],
+            "properties": {
+              "to": {
+                "description": "Required. Human role, principal id or Agent Spec component id that receives the task.",
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "when": {
+                "description": "Required. Plain sentence describing when the handoff happens.",
+                "$ref": "#/$defs/sentence"
+              }
+            }
+          }
+        }
+      }
+    },
+    "boundaries": {
+      "description": "Required. Chapter 5, boundaries and approvals.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["may_do_alone", "must_ask", "never", "escalate_when", "approval", "separation_of_duties"],
+      "properties": {
+        "may_do_alone": {
+          "description": "Required (may be empty). Things the agent may do without asking.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "must_ask": {
+          "description": "Required (may be empty). Things the agent must ask a human about first.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "never": {
+          "description": "Required (may be empty). Things the agent must never do. Where expressible, each SHOULD also appear as a forbid policy in policy.cedar.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "escalate_when": {
+          "description": "Required (may be empty). Situations in which the agent stops and reports to role.reports_to.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/sentence" }
+        },
+        "approval": { "$ref": "#/$defs/approval" },
+        "separation_of_duties": {
+          "description": "Required. Who may approve. Kept outside the approval object so that approval stays a verbatim ACS approval section.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requester_may_approve", "dispatcher_may_approve", "record_dispatcher_self_approval"],
+          "properties": {
+            "requester_may_approve": {
+              "description": "Required. Whether the requester of an action may approve it. MUST be false (lint rule harness.requester-may-approve); agent principals never approve.",
+              "type": "boolean"
+            },
+            "dispatcher_may_approve": {
+              "description": "Required. Whether the human who dispatched (assigned) the task may approve the agent's actions in that task.",
+              "type": "boolean"
+            },
+            "record_dispatcher_self_approval": {
+              "description": "Required. Whether a dispatcher approval is marked in the decision record (decided_by_dispatcher) and audit log. MUST be true when dispatcher_may_approve is true (lint rule harness.dispatcher-self-approval-recorded).",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "model": {
+      "description": "Required. Chapter 6, model requirements and budget. Capabilities only; model names MUST NOT appear in a template.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirements", "budget"],
+      "properties": {
+        "requirements": {
+          "description": "Required. What the deployer's model must support.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capabilities"],
+          "properties": {
+            "capabilities": {
+              "description": "Required. Capabilities the model must have.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": ["tool_calling", "parallel_tool_calling", "structured_output", "vision", "audio_input", "long_context", "reasoning", "streaming"]
+              }
+            },
+            "min_context_tokens": {
+              "description": "Recommended. Minimum context window in tokens.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "languages": {
+              "description": "Recommended. BCP 47 language tags the model must handle well.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/bcp47" }
+            }
+          }
+        },
+        "budget": {
+          "description": "Required. Spending limit.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["monthly_tokens", "on_exceed"],
+          "properties": {
+            "monthly_tokens": {
+              "description": "Required. Token budget per calendar month. MUST be greater than 0 (lint rule harness.budget-positive).",
+              "type": "integer",
+              "minimum": 0
+            },
+            "on_exceed": {
+              "description": "Required. What happens when the budget is used up.",
+              "enum": ["pause_and_notify", "notify_only", "stop"]
+            }
+          }
+        }
+      }
+    },
+    "extensions": {
+      "description": "Opt-In. Extension data. Keys MUST be namespaced as <reverse-DNS or domain>/<name>, for example com.example/ticketing. Consumers MUST ignore extensions they do not understand; extensions MUST NOT relax any rule of the profile.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+/[A-Za-z0-9._-]+$" }
+    }
+  },
+  "$defs": {
+    "sentence": {
+      "description": "A short plain-language sentence.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "bcp47": {
+      "description": "BCP 47 language tag (simplified syntactic check).",
+      "type": "string",
+      "pattern": "^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$"
+    },
+    "tool": {
+      "description": "Permission entry for one Agent Spec tool.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "approval"],
+      "properties": {
+        "name": {
+          "description": "Required. Tool name exactly as in agent.json: ASCII letters, digits, _ and -, 1 to 64 characters (the intersection of OpenAI function names, Claude API tool names and the MCP tool-name guidance). Templates SHOULD use snake_case, for example mail_send.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "description": {
+          "description": "Opt-In. Note for reviewers on what the tool changes.",
+          "type": "string",
+          "maxLength": 1000
+        },
+        "kind": {
+          "description": "Required. read or write. The declared kind takes effect only if classification.source is operator; otherwise the effective kind is write (fail closed).",
+          "enum": ["read", "write"]
+        },
+        "approval": {
+          "description": "Required. When a human must approve a call: always, over_limit (only when the call exceeds limit; the runtime passes context.limit_exceeded to Cedar) or never. An effective write tool MUST NOT use never (lint rule harness.write-approval).",
+          "enum": ["always", "over_limit", "never"]
+        },
+        "limit": {
+          "description": "Conditionally Required: an object when approval is over_limit (lint rule harness.limit-required); otherwise null or absent. The runtime sets the Cedar context attribute limit_exceeded to true when the call argument named by field is greater than max (false when the tool has no limit).",
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["field", "max"],
+              "properties": {
+                "field": {
+                  "description": "Required. Name of the tool argument compared against max.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "max": {
+                  "description": "Required. Largest value allowed without approval.",
+                  "type": "number",
+                  "minimum": 0
+                },
+                "unit": {
+                  "description": "Recommended. Unit of the field, for example an ISO 4217 currency code such as USD.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32
+                }
+              }
+            }
+          ]
+        },
+        "classification": {
+          "description": "Recommended. Who classified the tool. Absent means unclassified, which makes the tool a write tool.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": {
+            "source": {
+              "description": "Required. operator: the deployer or operator set kind and it takes effect. mcp_annotations: kind was only pre-filled from MCP annotations and is not confirmed; the effective kind is write. unclassified: nobody classified the tool; the effective kind is write.",
+              "enum": ["operator", "mcp_annotations", "unclassified"]
+            },
+            "mcp_annotations": {
+              "description": "Opt-In. MCP 2026-07-28 ToolAnnotations as received from the server. Untrusted hints; used only to suggest a classification.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "title": { "description": "Opt-In. MCP ToolAnnotations.title.", "type": "string" },
+                "readOnlyHint": { "description": "Opt-In. MCP ToolAnnotations.readOnlyHint (MCP default false).", "type": "boolean" },
+                "destructiveHint": { "description": "Opt-In. MCP ToolAnnotations.destructiveHint (MCP default true).", "type": "boolean" },
+                "idempotentHint": { "description": "Opt-In. MCP ToolAnnotations.idempotentHint (MCP default false).", "type": "boolean" },
+                "openWorldHint": { "description": "Opt-In. MCP ToolAnnotations.openWorldHint (MCP default true).", "type": "boolean" }
+              }
+            }
+          }
+        },
+        "recipient_binding": {
+          "description": "Opt-In. Free text describing how the targets of the tool (recipients, accounts, URLs) are bound, for example request_record: the recipient is taken from the stored request record, never from model output.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      }
+    },
+    "approval": {
+      "description": "Required. Approval configuration. Field names, types and value sets are those of the Microsoft Agent Control Specification (ACS) manifest approval section, package release 0.4.0-beta.1 (spec/schema/approval.schema.json), so this object can be copied into an ACS manifest unchanged. The profile adds requirements on top: default_resolver, timeout_seconds and on_timeout are required here, and on_timeout MUST be deny (lint rule harness.on-timeout-deny).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default_resolver", "timeout_seconds", "on_timeout", "resolvers"],
+      "properties": {
+        "default_resolver": {
+          "description": "Required. Name of the resolver consulted by default. MUST be a key of resolvers whose type is human (lint rule harness.default-resolver).",
+          "type": "string",
+          "minLength": 1
+        },
+        "timeout_seconds": {
+          "description": "Required. Maximum wait in seconds before on_timeout applies. A request whose timeout elapses becomes expired, which is treated as deny.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "on_timeout": {
+          "description": "Required. ACS value set deny, allow, suspend. The profile requires deny.",
+          "enum": ["deny", "allow", "suspend"]
+        },
+        "fatigue_threshold": {
+          "description": "Recommended. Soft cap on approval requests per agent within fatigue_window_seconds.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "fatigue_window_seconds": {
+          "description": "Recommended. Window in seconds across which the fatigue counter accumulates.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "resolvers": {
+          "description": "Required. Map of resolver name to resolver descriptor, as in ACS. At least one resolver.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "minLength": 1, "maxLength": 128 },
+          "additionalProperties": { "$ref": "#/$defs/resolver" }
+        }
+      }
+    },
+    "resolver": {
+      "description": "One approval resolver. As in ACS, type is the discriminator and additional keys are preserved verbatim (extension intended).",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "description": "Required. Resolver type. The profile defines human: a human principal decides through one of the listed channels.",
+          "type": "string",
+          "minLength": 1
+        },
+        "channels": {
+          "description": "Recommended for type human. Channels through which the human can decide.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["console", "email_link", "api", "other"] }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

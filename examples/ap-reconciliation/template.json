@@ -1,0 +1,46 @@
+{
+  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json",
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.2.0",
+  "id": "ap-reconciliation",
+  "title": "Accounts payable: reconcile invoices and bank transactions",
+  "summary": "Matches supplier invoices to bank transactions for Example Co., posts ledger adjustments for bank fees, currency differences, and rounding, and drafts supplier queries about duplicate invoices and unidentified payments. Adjustments over 500 USD and every supplier email need human approval.",
+  "locale": "en",
+  "files": [
+    {
+      "role": "agent",
+      "path": "agent.json",
+      "standard": "agentspec@26.3.1",
+      "sha256": "e55dde053a20aec55d6c38919643f2847e5e825be2fe13608a4483f6932f34d4"
+    },
+    {
+      "role": "harness",
+      "path": "harness.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "597db449fb272c51dd8ad90485cd3a6b20b3fdd6ed11377b0dd1d43708184a7c"
+    },
+    {
+      "role": "policy",
+      "path": "policy.cedar",
+      "standard": "cedar@4",
+      "sha256": "4a8059649c9444811253147c4c7f98bda1e3bcdb2ec21dfe50d6d4c802c933a0"
+    },
+    {
+      "role": "acceptance",
+      "path": "acceptance.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "5fbd7b7a91073f114de8db07f5ef64a506f4a4bace6f457c1b4a905ebbe9a56a"
+    },
+    {
+      "role": "skill",
+      "path": "skills/payables-matching/SKILL.md",
+      "standard": "agentskills",
+      "sha256": "fc1ba1b1a3ad30df80a36ec359bb4f75b19fb787dd1e2f0516c5a2cd8942fbf6"
+    }
+  ],
+  "provenance": {
+    "generated_by": "Claude Code",
+    "reviewed_by_human": false,
+    "created": "2026-10-23T04:20:00Z"
+  }
+}

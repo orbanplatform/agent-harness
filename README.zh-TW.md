@@ -1,10 +1,10 @@
 # Agent Harness Profile
 
-**狀態：草案，版本 0.1.0。** 在 1.0 之前，各章節都可能調整。
+**狀態：草案，版本 0.2.0。** 在 1.0 之前，各章節都可能調整。
 
 本文件為英文 [README.md](README.md) 的中文說明。規格內容以英文版 [spec/agent-harness-profile.md](spec/agent-harness-profile.md) 為準。
 
-組織要讓 AI agent 代為處理業務時，團隊通常會請 Claude Code 或 Codex 從頭寫一套 harness：agent 可以呼叫哪些工具、哪些動作必須先經人核准、重試時如何避免同一封信寄出兩次、要留下哪些紀錄、要怎麼測試。每一套寫法都不同，外部也無從查核。Agent Harness Profile 把這套 harness 寫成規格。主要廠商或基金會已經有規格的部分一律沿用，本規格只補上現有標準沒有涵蓋的部分：與動作參數綁定的核准紀錄、確保寫入只執行一次的帳本、第三方可以驗證的稽核紀錄格式，以及驗收測試。照這份規格描述的 agent 是一個 recipe bundle，可以審閱、簽章、交換，也可以用 conformance runner 檢查。
+組織要讓 AI agent 代為處理業務時，團隊通常會請 Claude Code 或 Codex 從頭寫一套 harness：agent 可以呼叫哪些工具、哪些動作必須先經人核准、重試時如何避免同一封信寄出兩次、要留下哪些紀錄、要怎麼測試。每一套寫法都不同，外部也無從查核。Agent Harness Profile 把這套 harness 寫成規格。主要廠商或基金會已經有規格的部分一律沿用，本規格只補上現有標準沒有涵蓋的部分：與動作參數綁定的核准紀錄、確保寫入只執行一次的帳本、第三方可以驗證的稽核紀錄格式，以及驗收測試。照這份規格描述的 agent 是一份 AI Agent 範本（template bundle），可以審閱、簽章、交換，也可以用 conformance runner 檢查。
 
 ## 沿用的標準
 
@@ -23,11 +23,11 @@
 
 各標準的固定版本與狀態列在規格第 4 節。
 
-## Recipe bundle 結構
+## AI Agent 範本的結構
 
 ```
 reception-enquiry/
-  recipe.json              清單：列出每個檔案及其 SHA-256 雜湊值
+  template.json              清單：列出每個檔案及其 SHA-256 雜湊值
   agent.json               Oracle Agent Spec 26.3.1 agent，未經修改
   harness.json             角色、知識來源、工具權限、作業步驟、
                            界線與核准規則、模型需求與預算
@@ -40,7 +40,7 @@ reception-enquiry/
 
 ## 快速開始
 
-### 檢查 recipe bundle
+### 檢查 AI Agent 範本
 
 需要 Node.js 22 以上。
 
@@ -53,9 +53,9 @@ node scripts/conformance.mjs vectors   # 以參考實作執行全部測試向量
 npm test                               # CI 執行的全部檢查
 ```
 
-### 用 skill 設計 recipe
+### 用 skill 設計 AI Agent 範本
 
-本儲存庫附有 Agent Skill `agent-harness-design`，會詢問 agent 的工作內容，再產生 recipe bundle。它只提供指示，只在您指定的 recipe 目錄寫入檔案，不會更動 agent 的設定。
+本儲存庫附有 Agent Skill `agent-harness-design`，會詢問 agent 的工作內容，再產生 AI Agent 範本。它只提供指示，只在您指定的範本目錄寫入檔案，不會更動 agent 的設定。
 
 Claude Code，在終端機執行：
 
@@ -84,7 +84,7 @@ codex plugin add agent-harness@orbanplatform
 
 | 等級 | 適用對象 | 內容 |
 |---|---|---|
-| **L1 Describe** | Recipe bundle | 每個檔案通過 schema 驗證、雜湊值相符、lint 規則通過、skill 通過 `skills-ref validate`，且 `agent.json` 可由 `pyagentspec` 26.3.1 載入。 |
+| **L1 Describe** | AI Agent 範本 | 每個檔案通過 schema 驗證、雜湊值相符、lint 規則通過、skill 通過 `skills-ref validate`，且 `agent.json` 可由 `pyagentspec` 26.3.1 載入。 |
 | **L2 Gate** | Harness 執行環境 | 未分類的工具一律視為寫入、寫入須等待核准、Cedar 預設拒絕、核准綁定動作的確切參數、agent 不得核准、逾時即拒絕。 |
 | **L3 Prove** | Harness 執行環境 | 寫入只執行一次的帳本、雜湊鏈結的稽核事件、RFC 9162 Merkle 根值，以及第三方可驗證的簽章檢查點。 |
 

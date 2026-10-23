@@ -1,0 +1,46 @@
+{
+  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json",
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.2.0",
+  "id": "ticket-reply-minimal",
+  "title": "Minimal fixture: reply to a support ticket",
+  "summary": "Conformance fixture. Reads one support ticket and replies to its sender; a human approves every reply before it is sent.",
+  "locale": "en",
+  "files": [
+    {
+      "role": "agent",
+      "path": "agent.json",
+      "standard": "agentspec@26.3.1",
+      "sha256": "419a77f73b45af03ca6daa510f8a51c0f766379d7e42552e093378028a9464c0"
+    },
+    {
+      "role": "harness",
+      "path": "harness.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "b33fc7078eed743ae075d777ad2b43505abf2c0cb18885d98753e958fde7ad68"
+    },
+    {
+      "role": "policy",
+      "path": "policy.cedar",
+      "standard": "cedar@4",
+      "sha256": "3b396ecff766639d03fc7ad921ab1210eae3fa935956cb0af70c9fe2a4316dab"
+    },
+    {
+      "role": "acceptance",
+      "path": "acceptance.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "1d730fac180c285d8fa7db1b8a48a53b03abe5d2e732c66f760d30bc012e3f5d"
+    },
+    {
+      "role": "skill",
+      "path": "skills/ticket-reply/SKILL.md",
+      "standard": "agentskills",
+      "sha256": "5dc65a8ea1a893996ec009921b2bf4bb0bbc66fe2c61f89a5505324a817e688b"
+    }
+  ],
+  "provenance": {
+    "generated_by": "human",
+    "reviewed_by_human": true,
+    "created": "2026-10-22T00:00:00Z"
+  }
+}

@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve the Agent Harness Profile. This repository holds a specification, its JSON Schemas, a reference implementation, test vectors, example recipes and a skill. Contributions of every kind are welcome: corrections, clarifications, test vectors, implementation reports and proposals.
+Thank you for helping improve the Agent Harness Profile. This repository holds a specification, its JSON Schemas, a reference implementation, test vectors, example templates and a skill. Contributions of every kind are welcome: corrections, clarifications, test vectors, implementation reports and proposals.
 
 ## Before you start
 
@@ -44,10 +44,10 @@ Requirements: Node.js 22 or later. The reference code has no runtime dependencie
 npm ci
 npm test                                                  # everything CI runs
 node scripts/conformance.mjs vectors                      # reference implementation against all test vectors
-node scripts/conformance.mjs l1 examples/reception-enquiry   # one recipe bundle at level L1
+node scripts/conformance.mjs l1 examples/reception-enquiry   # one template bundle at level L1
 ```
 
-If you change a recipe file, update its `sha256` in that recipe's `recipe.json`.
+If you change a template file, update its `sha256` in that template's `template.json`.
 
 ### Test vectors
 
@@ -60,7 +60,7 @@ Test vectors under `test-vectors/` are generated from the reference implementati
 - Every external specification is cited with a pinned version and a URL in the References section.
 - Write plainly. Prefer short sentences and concrete examples. Do not claim that the profile is the first or the only one of its kind, and do not describe conformance as certification.
 - Examples use `example.com`, `example.org` or `example.net` and fictional organizations such as "Example Co.". Never include real customer data, personal data, credentials or internal hostnames.
-- Recipes in `examples/` must not name a specific model; state capabilities in `harness.json` instead.
+- Templates in `examples/` must not name a specific model; state capabilities in `harness.json` instead.
 
 ## Code of conduct
 

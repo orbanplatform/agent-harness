@@ -13,7 +13,7 @@ Include, where you can:
 
 - the affected file, section of the specification, schema, test vector or reference module, and the commit or release;
 - a description of the problem and its impact;
-- steps or a minimal recipe bundle that reproduces it;
+- steps or a minimal template bundle that reproduces it;
 - whether you have shared the report with anyone else.
 
 Do not include real personal data or credentials in a report. Use `example.com` addresses and fictional names.
@@ -25,7 +25,7 @@ In scope:
 - the specification (`spec/agent-harness-profile.md`), where a requirement, if implemented as written, would let an action be executed without the approval or policy decision the profile promises, would let audit records be altered without detection, or would expose personal data;
 - the JSON Schemas (`schemas/`) and the conformance runner (`scripts/conformance.mjs`), where they accept input the specification forbids;
 - the reference code (`reference/`) and test vectors (`test-vectors/`), where they disagree with the specification in a way that weakens a security property;
-- the example recipes (`examples/`) and the skill (`skills/agent-harness-design/`), where they would lead a user or an agent to an unsafe configuration;
+- the example templates (`examples/`) and the skill (`skills/agent-harness-design/`), where they would lead a user or an agent to an unsafe configuration;
 - the plugin manifests (`.claude-plugin/`, `.codex-plugin/`, `.agents/`).
 
 Out of scope:
@@ -49,4 +49,4 @@ There is no bug bounty program.
 
 ## Supported versions
 
-The profile is a Draft (version 0.1.0). Fixes are made on the `main` branch and in the next release. Earlier drafts are not maintained.
+The profile is a Draft (version 0.2.0). Fixes are made on the `main` branch and in the next release. Earlier drafts are not maintained.

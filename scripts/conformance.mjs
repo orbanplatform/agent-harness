@@ -2,23 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright Orban Platform Inc.
 //
-// Agent Harness Profile 0.1 conformance runner.
+// Agent Harness Profile 0.2 conformance runner.
 //
 //   node scripts/conformance.mjs vectors [--write]
-//       Recompute every test vector in test-vectors/0.1/*.json from its inputs
+//       Recompute every test vector in test-vectors/0.2/*.json from its inputs
 //       with the reference implementation, and check that each file is
 //       byte-identical to what the generator below produces. --write
 //       regenerates the files.
-//   node scripts/conformance.mjs l1 <recipe-dir>
-//       L1 Describe checks for one recipe bundle: JSON Schema (Ajv, draft
+//   node scripts/conformance.mjs l1 <template-dir>
+//       L1 Describe checks for one template bundle: JSON Schema (Ajv, draft
 //       2020-12), sha256 digests, lint rules, Cedar schema and policy
 //       validation (@cedar-policy/cedar-wasm), write-gate check.
-//   node scripts/conformance.mjs digests <recipe-dir> [--write]
-//       Print the sha256 of every file listed in recipe.json; --write stores
-//       them in recipe.json.
+//   node scripts/conformance.mjs digests <template-dir> [--write]
+//       Print the sha256 of every file listed in template.json; --write stores
+//       them in template.json.
 //   node scripts/conformance.mjs test
 //       vectors + l1 on every examples/* bundle + the fixtures in
-//       test-vectors/0.1/recipes/ (valid-* must pass; each invalid-* must fail
+//       test-vectors/0.2/templates/ (valid-* must pass; each invalid-* must fail
 //       exactly the rule named in its README.md).
 //
 // Requires Node >= 22 and the dev dependencies (npm ci).
@@ -37,14 +37,14 @@ import { b64encode, encodeVkey, keyPairFromSeed, parseVkey, signCheckpoint, sign
 import { decide, fingerprint } from '../reference/ledger.mjs';
 import { STATES as APPROVAL_STATES, TERMINAL_STATES as APPROVAL_TERMINAL, TRANSITIONS, canTransition, validateDecision } from '../reference/approval.mjs';
 import { classify } from '../reference/classify.mjs';
-import { lintRecipe, TOOL_NAME_RE, writeTools } from '../reference/lint.mjs';
+import { lintTemplate, TOOL_NAME_RE, writeTools } from '../reference/lint.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SCHEMA_DIR = join(ROOT, 'schemas', '0.1');
-const VECTOR_DIR = join(ROOT, 'test-vectors', '0.1');
-const FIXTURE_DIR = join(VECTOR_DIR, 'recipes');
-const SCHEMA_BASE = 'https://orbanplatform.com/agent-harness/schemas/0.1/';
-const SCHEMA_NAMES = ['recipe', 'harness', 'approval-request', 'approval-decision', 'ledger-entry', 'audit-event', 'acceptance'];
+const SCHEMA_DIR = join(ROOT, 'schemas', '0.2');
+const VECTOR_DIR = join(ROOT, 'test-vectors', '0.2');
+const FIXTURE_DIR = join(VECTOR_DIR, 'templates');
+const SCHEMA_BASE = 'https://orbanplatform.com/agent-harness/schemas/0.2/';
+const SCHEMA_NAMES = ['template', 'harness', 'approval-request', 'approval-decision', 'ledger-entry', 'audit-event', 'acceptance'];
 
 // ---------------------------------------------------------------------------
 // Output
@@ -206,7 +206,7 @@ async function runL1(dirArg, { print = true } = {}) {
   };
 
   if (!existsSync(dir) || !lstatSync(dir).isDirectory()) {
-    add('FAIL', 'recipe.parse', `${dirArg} is not a directory`);
+    add('FAIL', 'template.parse', `${dirArg} is not a directory`);
     return finish();
   }
 
@@ -238,14 +238,14 @@ async function runL1(dirArg, { print = true } = {}) {
     }
   };
 
-  // recipe.json, digests, unlisted files
-  readJson('recipe', 'recipe.json');
-  await schemaCheck('recipe', 'recipe.json');
-  const listed = new Set(['recipe.json']);
-  if (ok.recipe) {
+  // template.json, digests, unlisted files
+  readJson('template', 'template.json');
+  await schemaCheck('template', 'template.json');
+  const listed = new Set(['template.json']);
+  if (ok.template) {
     const missing = [];
     const mismatched = [];
-    for (const f of docs.recipe.files) {
+    for (const f of docs.template.files) {
       listed.add(f.path);
       const s = safeFile(dir, f.path);
       if (s.error) {
@@ -253,18 +253,18 @@ async function runL1(dirArg, { print = true } = {}) {
         continue;
       }
       const actual = sha256Hex(readFileSync(s.full));
-      if (actual !== f.sha256) mismatched.push(`${f.path}: recipe.json says ${f.sha256}, file is ${actual}`);
+      if (actual !== f.sha256) mismatched.push(`${f.path}: template.json says ${f.sha256}, file is ${actual}`);
     }
-    if (missing.length) for (const m of missing) add('FAIL', 'recipe.files-exist', m);
-    else add('PASS', 'recipe.files-exist', `${docs.recipe.files.length} listed files present`);
-    if (mismatched.length) for (const m of mismatched) add('FAIL', 'recipe.digest', m);
-    else if (!missing.length) add('PASS', 'recipe.digest', 'every sha256 matches the stored bytes');
-    else add('SKIP', 'recipe.digest', 'some listed files are missing');
+    if (missing.length) for (const m of missing) add('FAIL', 'template.files-exist', m);
+    else add('PASS', 'template.files-exist', `${docs.template.files.length} listed files present`);
+    if (mismatched.length) for (const m of mismatched) add('FAIL', 'template.digest', m);
+    else if (!missing.length) add('PASS', 'template.digest', 'every sha256 matches the stored bytes');
+    else add('SKIP', 'template.digest', 'some listed files are missing');
     const unlisted = walk(dir).filter((p) => !listed.has(p) && p !== 'README.md');
-    if (unlisted.length) for (const p of unlisted) add('WARN', 'recipe.unlisted-file', `${p} is not listed in recipe.json (not covered by digests or attestations)`);
-    else add('PASS', 'recipe.unlisted-file', 'no unlisted files');
+    if (unlisted.length) for (const p of unlisted) add('WARN', 'template.unlisted-file', `${p} is not listed in template.json (not covered by digests or attestations)`);
+    else add('PASS', 'template.unlisted-file', 'no unlisted files');
   } else {
-    add('SKIP', 'recipe.digest', 'recipe.json is not valid');
+    add('SKIP', 'template.digest', 'template.json is not valid');
   }
 
   // agent.json (pure Agent Spec; loaded with pyagentspec in CI)
@@ -278,8 +278,8 @@ async function runL1(dirArg, { print = true } = {}) {
   // skills
   const skills = [];
   ok.skills = false;
-  if (ok.recipe) {
-    for (const f of docs.recipe.files.filter((x) => x.role === 'skill')) {
+  if (ok.template) {
+    for (const f of docs.template.files.filter((x) => x.role === 'skill')) {
       const s = safeFile(dir, f.path);
       if (s.error) continue;
       const skillDir = f.path.split('/')[1];
@@ -294,7 +294,7 @@ async function runL1(dirArg, { print = true } = {}) {
   }
 
   // lint rules
-  const lint = lintRecipe({ ...docs, skills: ok.skills ? skills : undefined, ok });
+  const lint = lintTemplate({ ...docs, skills: ok.skills ? skills : undefined, ok });
   for (const r of lint) {
     if (r.status === 'pass') add('PASS', r.rule);
     else if (r.status === 'skip') add('SKIP', r.rule, r.messages.join('; '));
@@ -402,10 +402,10 @@ async function cedarChecks(dir, docs, ok, add) {
 
 function runDigests(dirArg, { write }) {
   const dir = resolve(dirArg);
-  const recipePath = join(dir, 'recipe.json');
-  const recipe = parseStrict(readFileSync(recipePath, 'utf8'));
+  const templatePath = join(dir, 'template.json');
+  const template = parseStrict(readFileSync(templatePath, 'utf8'));
   let changed = 0;
-  for (const f of recipe.files ?? []) {
+  for (const f of template.files ?? []) {
     const s = safeFile(dir, f.path);
     if (s.error) {
       console.log(`${'-'.repeat(64)}  ${f.path}  (${s.error})`);
@@ -417,8 +417,8 @@ function runDigests(dirArg, { write }) {
     f.sha256 = d;
   }
   if (write && changed) {
-    writeFileSync(recipePath, `${JSON.stringify(recipe, null, 2)}\n`);
-    console.log(`updated ${changed} digest${changed === 1 ? '' : 's'} in recipe.json`);
+    writeFileSync(templatePath, `${JSON.stringify(template, null, 2)}\n`);
+    console.log(`updated ${changed} digest${changed === 1 ? '' : 's'} in template.json`);
   }
   return true;
 }
@@ -433,7 +433,7 @@ function assert(cond, msg) {
   if (!cond) throw new Error(`vector generator self-check failed: ${msg}`);
 }
 const header = (title, sources) => ({
-  profile: 'https://orbanplatform.com/agent-harness/0.1',
+  profile: 'https://orbanplatform.com/agent-harness/0.2',
   profile_version: '0.1.0',
   title,
   generated_by: 'reference/*.mjs via `node scripts/conformance.mjs vectors --write`',
@@ -676,9 +676,9 @@ function checkJcs(file) {
 // ---------------------------------------------------------------------------
 
 const TEST_LOG_NAME = 'example.com/agent-harness-test-log';
-const TEST_SEED = createHash('sha256').update('agent-harness 0.1 TEST ONLY audit log signing seed').digest();
-const OTHER_TEST_SEED = createHash('sha256').update('agent-harness 0.1 TEST ONLY unrelated signing seed').digest();
-const TEST_HMAC_INPUT = 'agent-harness 0.1 TEST ONLY HMAC material for record apr-0001';
+const TEST_SEED = createHash('sha256').update('agent-harness 0.2 TEST ONLY audit log signing seed').digest();
+const OTHER_TEST_SEED = createHash('sha256').update('agent-harness 0.2 TEST ONLY unrelated signing seed').digest();
+const TEST_HMAC_INPUT = 'agent-harness 0.2 TEST ONLY HMAC material for record apr-0001';
 const TEST_HMAC_KEY = createHash('sha256').update(TEST_HMAC_INPUT, 'utf8').digest();
 const TEST_HMAC_MESSAGE = 'Checked the price against the list.';
 
@@ -844,7 +844,7 @@ async function genAudit() {
       label: 'TEST ONLY. Published seed; anyone can sign with it. Never trust this key outside test vectors.',
       algorithm: 'Ed25519 (RFC 8032), C2SP signed-note signature type 0x01',
       seed_hex: TEST_SEED.toString('hex'),
-      seed_derivation: 'SHA-256("agent-harness 0.1 TEST ONLY audit log signing seed")',
+      seed_derivation: 'SHA-256("agent-harness 0.2 TEST ONLY audit log signing seed")',
       key_name: TEST_LOG_NAME,
       public_key_hex: kp.publicKey.toString('hex'),
       key_id_hex: vk.keyId.toString('hex'),
@@ -1253,7 +1253,7 @@ async function genApproval() {
     notes: [
       'pairs lists every (from, to) over the seven states; valid: false means the transition MUST be rejected.',
       'decision_cases: request is the approval request below; context.state is the request state when the decision arrives; context.agent_principals are agent principal ids known to the runtime. Invalid reasons are those of reference/approval.mjs; a conforming runtime MUST reach the same valid/invalid verdict.',
-      'cedar: effective schema = schemas/0.1/harness.cedarschema with one action per tools[] name; policies validate in strict mode; each request is evaluated with validateRequest = true and no entities. context.limit_exceeded is computed by the runtime from tools[].limit and the call arguments (false when the tool has no limit).',
+      'cedar: effective schema = schemas/0.2/harness.cedarschema with one action per tools[] name; policies validate in strict mode; each request is evaluated with validateRequest = true and no entities. context.limit_exceeded is computed by the runtime from tools[].limit and the call arguments (false when the tool has no limit).',
     ],
     states: APPROVAL_STATES,
     terminal_states: APPROVAL_TERMINAL,
@@ -1364,10 +1364,10 @@ function subdirs(dir, prefix = '') {
 
 async function runTest() {
   let ok = true;
-  console.log('== Test vectors (test-vectors/0.1)');
+  console.log('== Test vectors (test-vectors/0.2)');
   ok = (await runVectors({ write: false })) && ok;
 
-  console.log('\n== Fixtures that must pass L1 (test-vectors/0.1/recipes/valid-*)');
+  console.log('\n== Fixtures that must pass L1 (test-vectors/0.2/templates/valid-*)');
   const valid = subdirs(FIXTURE_DIR, 'valid-');
   if (valid.length === 0) {
     report('FAIL', 'fixtures', 'no valid-* fixture found');
@@ -1389,8 +1389,8 @@ async function runTest() {
   if (examples.length === 0) report('WARN', 'examples', 'no examples/* bundles yet');
   for (const d of examples) {
     const name = posix(relative(ROOT, d));
-    if (!existsSync(join(d, 'recipe.json'))) {
-      report('WARN', name, 'no recipe.json yet; skipped');
+    if (!existsSync(join(d, 'template.json'))) {
+      report('WARN', name, 'no template.json yet; skipped');
       continue;
     }
     const r = await runL1(d);
@@ -1398,7 +1398,7 @@ async function runTest() {
     console.log('');
   }
 
-  console.log('== Fixtures that must fail L1 (test-vectors/0.1/recipes/invalid-*)');
+  console.log('== Fixtures that must fail L1 (test-vectors/0.2/templates/invalid-*)');
   const invalid = subdirs(FIXTURE_DIR, 'invalid-');
   if (invalid.length === 0) {
     report('FAIL', 'fixtures', 'no invalid-* fixture found');
@@ -1432,8 +1432,8 @@ async function runTest() {
 
 const USAGE = `usage:
   node scripts/conformance.mjs vectors [--write]
-  node scripts/conformance.mjs l1 <recipe-dir>
-  node scripts/conformance.mjs digests <recipe-dir> [--write]
+  node scripts/conformance.mjs l1 <template-dir>
+  node scripts/conformance.mjs digests <template-dir> [--write]
   node scripts/conformance.mjs test`;
 
 async function main(argv) {

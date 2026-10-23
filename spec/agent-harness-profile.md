@@ -1,16 +1,16 @@
 # Agent Harness Profile
 
-**Version 0.1.0 (Draft)**
+**Version 0.2.0 (Draft)**
 
 | | |
 |---|---|
-| Profile URI | `https://orbanplatform.com/agent-harness/0.1` |
-| Version | 0.1.0 |
+| Profile URI | `https://orbanplatform.com/agent-harness/0.2` |
+| Version | 0.2.0 |
 | Status | Draft |
 | Date | 2026-10-22 |
 | Editors | Orban Platform Inc. maintainers (contact@orbanplatform.com) |
 | Repository | https://github.com/orbanplatform/agent-harness |
-| Schemas | `schemas/0.1/` (JSON Schema 2020-12, `$id` base `https://orbanplatform.com/agent-harness/schemas/0.1/`) |
+| Schemas | `schemas/0.2/` (JSON Schema 2020-12, `$id` base `https://orbanplatform.com/agent-harness/schemas/0.2/`) |
 
 Copyright 2026 Orban Platform Inc.
 
@@ -20,13 +20,13 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 
 This document defines the Agent Harness Profile, a profile of existing specifications for describing and running an AI agent that acts on behalf of an organization. A profile, in the sense used by the OpenID FAPI profiles of OAuth 2.0 [FAPI], selects and constrains existing standards and defines only what they leave unspecified.
 
-The profile specifies a *recipe bundle*: a directory that describes an agent's job (as an Oracle Open Agent Specification document), its tool permissions, its human approval rules, its authorization policy (in Cedar), its acceptance tests, and the Agent Skills it uses. It further specifies the runtime behaviour a *harness* needs to execute such a recipe safely: tool classification that fails closed, approval records bound to the exact arguments of an action, exactly-once execution of writes, tamper-evident audit records that a third party can verify, and trace correlation.
+The profile specifies a *template bundle*: a directory that describes an agent's job (as an Oracle Open Agent Specification document), its tool permissions, its human approval rules, its authorization policy (in Cedar), its acceptance tests, and the Agent Skills it uses. It further specifies the runtime behaviour a *harness* needs to execute such a template safely: tool classification that fails closed, approval records bound to the exact arguments of an action, exactly-once execution of writes, tamper-evident audit records that a third party can verify, and trace correlation.
 
 The profile adopts, as published, the Oracle Open Agent Specification, Agent Skills, Cedar, CloudEvents (adding two extension attributes through the CloudEvents extension mechanism), RFC 8785, RFC 9162, the C2SP signed-note and tlog-checkpoint specifications, OpenTelemetry GenAI semantic conventions, W3C Trace Context and the in-toto Attestation Framework. It extends the Microsoft Agent Control Specification approval model and the IETF Idempotency-Key draft. It defines new formats only for approval request and decision records, the write ledger, the harness sidecar, and acceptance samples, because no existing specification covers them.
 
 ## Status of This Document
 
-This is a Draft of version 0.1.0 of the Agent Harness Profile. It is published by Orban Platform Inc. to collect review and implementation experience. It is not a standard of the IETF, W3C, the Linux Foundation, the Agentic AI Foundation or any other standards body, and none of them has reviewed or endorsed it.
+This is a Draft of version 0.2.0 of the Agent Harness Profile. It is published by Orban Platform Inc. to collect review and implementation experience. It is not a standard of the IETF, W3C, the Linux Foundation, the Agentic AI Foundation or any other standards body, and none of them has reviewed or endorsed it.
 
 The profile is versioned with Semantic Versioning 2.0.0 [SEMVER] (see [Section 20](#20-versioning-and-change-process)). While the major version is 0, any minor release can contain breaking changes. Implementations SHOULD state the exact version they implement.
 
@@ -37,11 +37,13 @@ Each section carries a stability marker, following the convention of the OpenTel
 | **Development** | The section can change in any way, including incompatibly, in any minor release. Feedback is requested. |
 | **Stable** | The section changes incompatibly only in a new major version. Deprecated items are kept for at least 12 months after 1.0.0 (see [Section 20](#20-versioning-and-change-process)). |
 
-**Every section of version 0.1.0 is Development.** No section is Stable.
+**Every section of version 0.2.0 is Development.** No section is Stable.
 
 Comments are welcome as GitHub issues at https://github.com/orbanplatform/agent-harness/issues. Security problems are reported privately as described in `SECURITY.md`.
 
 Known open issues in this Draft are listed in [Section 1.4](#14-open-issues).
+
+Changes from 0.1.0: the unit of exchange is renamed from *recipe* to *template* (bundle manifest `recipe.json` → `template.json`, `recipe_id` → `template_id`, lint rule ids `recipe.*` → `template.*`, schema `recipe.schema.json` → `template.schema.json`), following the term used by major vendors for packaged agent definitions. The profile URI, schema identifiers and test-vector paths move from `0.1` to `0.2`. There are no other normative changes.
 
 ## Table of Contents
 
@@ -49,7 +51,7 @@ Known open issues in this Draft are listed in [Section 1.4](#14-open-issues).
 2. [Terminology](#2-terminology)
 3. [Design Principles](#3-design-principles)
 4. [Standards This Profile Builds On](#4-standards-this-profile-builds-on)
-5. [Recipe Bundle](#5-recipe-bundle)
+5. [Template Bundle](#5-template-bundle)
 6. [Agent Definition](#6-agent-definition)
 7. [Harness Sidecar](#7-harness-sidecar)
 8. [Tool Classification](#8-tool-classification)
@@ -89,7 +91,7 @@ Field tables in this document give each field one of the following requirement l
 | Recommended | The field SHOULD be present. |
 | Opt-In | The field MAY be present. Producers include it only by deliberate choice. |
 
-The JSON Schemas in `schemas/0.1/` are normative for syntax. Where a schema and the prose of this document disagree, the prose of this document is authoritative and the disagreement is a defect to be reported. Schema validation is necessary but not sufficient: the lint rules in this document are checked by the conformance runner ([Section 16](#16-conformance)).
+The JSON Schemas in `schemas/0.2/` are normative for syntax. Where a schema and the prose of this document disagree, the prose of this document is authoritative and the disagreement is a defect to be reported. Schema validation is necessary but not sufficient: the lint rules in this document are checked by the conformance runner ([Section 16](#16-conformance)).
 
 ### 1.3 Notation
 
@@ -105,7 +107,7 @@ The JSON Schemas in `schemas/0.1/` are normative for syntax. Where a schema and 
 The following are known gaps in this Draft. Each is tracked as a GitHub issue labelled `proposal`.
 
 1. **Argument values in policy.** The Cedar context ([Section 9.2](#92-cedar-schema)) carries the arguments digest and one value the harness computes from the arguments, `limit_exceeded`, but not the argument values themselves. Policies that depend on other argument values cannot yet be written in Cedar under this profile.
-2. **Per-approver signatures.** Approval decisions are authenticated by the harness, not signed by the approver. Checkpoint signatures ([Section 12.7](#127-signed-checkpoints)) are signatures of the log operator. Non-repudiation of an individual approver is out of scope for 0.1.0.
+2. **Per-approver signatures.** Approval decisions are authenticated by the harness, not signed by the approver. Checkpoint signatures ([Section 12.7](#127-signed-checkpoints)) are signatures of the log operator. Non-repudiation of an individual approver is out of scope for 0.2.0.
 3. **COSE Receipts.** RFC 9942 COSE Receipts [RFC9942] are a candidate encoding for inclusion and consistency proofs in a later version.
 4. **A2A Agent Card generation.** Generating an A2A Agent Card [A2A] from `agent.json` and `harness.json` is described only informatively ([Section 6.5](#65-discovery-informative)).
 
@@ -123,11 +125,11 @@ This document uses the following terms. Terms from the Anthropic article "Demyst
 **Harness**
 : The runtime that hosts an agent and enforces this profile: it classifies tools, evaluates policy, holds actions for approval, keeps the write ledger, executes tools, and writes audit events. The Anthropic article cited above calls this "the system that enables a model to act as an agent". In ACS [ACS] terms, the harness is the *host*.
 
-**Recipe**
-: A recipe bundle ([Section 5](#5-recipe-bundle)): the directory that describes one agent's job and the rules that govern it. A recipe contains no credentials, no personal data and no model names.
+**Template**
+: A template bundle ([Section 5](#5-template-bundle)): the directory that describes one agent's job and the rules that govern it. A template contains no credentials, no personal data and no model names.
 
 **Deployer**
-: The party that installs a recipe into a harness. The deployer supplies the model configuration, credentials and bindings of tools to real systems, and accepts the tool classification.
+: The party that installs a template into a harness. The deployer supplies the model configuration, credentials and bindings of tools to real systems, and accepts the tool classification.
 
 **Operator**
 : The party that runs the harness and is accountable for its configuration, including tool classification. The deployer and the operator MAY be the same party.
@@ -169,7 +171,7 @@ This document uses the following terms. Terms from the Anthropic article "Demyst
 : `hex(SHA-256(JCS(arguments)))`. The same value is called the *arguments digest* in approval records and in policy context.
 
 **Enforced identity**
-: The value an approval decision is bound to. In version 0.1.0 it is the arguments digest of the action. A decision whose enforced identity differs from the request's arguments digest is invalid. The name follows ACS and Agent Hooks; [Section 10.1](#101-verdict-model) states how the value here differs from theirs.
+: The value an approval decision is bound to. In version 0.2.0 it is the arguments digest of the action. A decision whose enforced identity differs from the request's arguments digest is invalid. The name follows ACS and Agent Hooks; [Section 10.1](#101-verdict-model) states how the value here differs from theirs.
 
 **Audit event**
 : A CloudEvents 1.0.2 event in JSON format that conforms to [Section 12](#12-audit).
@@ -195,7 +197,7 @@ The following principles explain the requirements in this document. They are not
 
 5. **Humans approve writes.** Approval is a human decision recorded as data, bound to the arguments, decided at most once, and never made by an agent principal.
 
-6. **Everything verifiable.** Recipes carry digests of every file. Releases carry signed attestations. Audit records form a hash chain and a Merkle tree whose root is signed and published. Conformance is checked by a runner against published test vectors. A third party can check each of these without trusting the party that produced them.
+6. **Everything verifiable.** Templates carry digests of every file. Releases carry signed attestations. Audit records form a hash chain and a Merkle tree whose root is signed and published. Conformance is checked by a runner against published test vectors. A third party can check each of these without trusting the party that produced them.
 
 ---
 
@@ -232,58 +234,58 @@ The OpenAI Evals API, which would otherwise be a candidate for acceptance tests,
 
 ---
 
-## 5. Recipe Bundle
+## 5. Template Bundle
 
 **Stability: Development**
 
 ### 5.1 Layout
 
-A recipe bundle is a directory with the following layout. The file names shown are REQUIRED; the JSON Schema `schemas/0.1/recipe.schema.json` enforces them.
+A template bundle is a directory with the following layout. The file names shown are REQUIRED; the JSON Schema `schemas/0.2/template.schema.json` enforces them.
 
 ```
-<recipe>/
-  recipe.json              manifest (this profile)
+<template>/
+  template.json              manifest (this profile)
   agent.json               Oracle Agent Spec 26.3.1 document, unmodified
   harness.json             harness sidecar (this profile, six chapters)
-  policy.cedar             Cedar policies against schemas/0.1/harness.cedarschema
+  policy.cedar             Cedar policies against schemas/0.2/harness.cedarschema
   acceptance.json          acceptance samples (this profile)
   skills/<name>/SKILL.md   one or more Agent Skills
 ```
 
 The bundle is the unit that people exchange, review, sign and deploy. A bundle MUST NOT contain credentials, personal data, or the name of a specific model ([Section 18](#18-privacy-considerations)).
 
-### 5.2 recipe.json
+### 5.2 template.json
 
-`recipe.json` is the manifest. Schema: `schemas/0.1/recipe.schema.json`.
+`template.json` is the manifest. Schema: `schemas/0.2/template.schema.json`.
 
 | Field | Type | Requirement | Meaning |
 |---|---|---|---|
-| `$schema` | string | Recommended | When present, MUST be `https://orbanplatform.com/agent-harness/schemas/0.1/recipe.schema.json`. |
-| `profile` | string | Required | MUST be `https://orbanplatform.com/agent-harness/0.1`. |
-| `profile_version` | string | Required | MUST be `0.1.0`. |
-| `id` | string | Required | Recipe identifier matching `^[a-z0-9][a-z0-9-]{1,62}$`. |
+| `$schema` | string | Recommended | When present, MUST be `https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json`. |
+| `profile` | string | Required | MUST be `https://orbanplatform.com/agent-harness/0.2`. |
+| `profile_version` | string | Required | MUST be `0.2.0`. |
+| `id` | string | Required | Template identifier matching `^[a-z0-9][a-z0-9-]{1,62}$`. |
 | `title` | string | Required | Short human-readable title. |
 | `summary` | string | Required | Plain-language summary of the agent's job, at most 500 characters. |
 | `locale` | string | Required | BCP 47 [RFC5646] tag of the human-readable text in the bundle. |
-| `files` | array | Required | One entry per file of the bundle other than `recipe.json` ([Section 5.3](#53-file-entries-and-digests)). |
+| `files` | array | Required | One entry per file of the bundle other than `template.json` ([Section 5.3](#53-file-entries-and-digests)). |
 | `provenance` | object | Required | Who produced the bundle ([Section 5.4](#54-provenance)). |
 
 Example:
 
 ```json
 {
-  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.1/recipe.schema.json",
-  "profile": "https://orbanplatform.com/agent-harness/0.1",
-  "profile_version": "0.1.0",
+  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json",
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.2.0",
   "id": "reception-enquiry",
   "title": "Reception: answer website enquiries",
   "summary": "Reads enquiries from the Example Co. website, drafts replies from the price list and calendar, and sends each reply only after a person approves it.",
   "locale": "en",
   "files": [
     {"role": "agent", "path": "agent.json", "standard": "agentspec@26.3.1", "sha256": "<64 hex>"},
-    {"role": "harness", "path": "harness.json", "standard": "agent-harness@0.1.0", "sha256": "<64 hex>"},
+    {"role": "harness", "path": "harness.json", "standard": "agent-harness@0.2.0", "sha256": "<64 hex>"},
     {"role": "policy", "path": "policy.cedar", "standard": "cedar@4", "sha256": "<64 hex>"},
-    {"role": "acceptance", "path": "acceptance.json", "standard": "agent-harness@0.1.0", "sha256": "<64 hex>"},
+    {"role": "acceptance", "path": "acceptance.json", "standard": "agent-harness@0.2.0", "sha256": "<64 hex>"},
     {"role": "skill", "path": "skills/reception-reply/SKILL.md", "standard": "agentskills", "sha256": "<64 hex>"}
   ],
   "provenance": {"generated_by": "human", "reviewed_by_human": true, "created": "2026-10-23T00:00:00Z"}
@@ -298,17 +300,17 @@ Each entry of `files` has the following fields.
 |---|---|---|---|
 | `role` | string | Required | One of `agent`, `harness`, `policy`, `acceptance`, `skill`. |
 | `path` | string | Required | Path relative to the bundle root, with `/` separators, no leading `/`, and no empty, `.` or `..` segments. |
-| `standard` | string | Required | `agentspec@26.3.1` for `agent`; `agent-harness@0.1.0` for `harness` and `acceptance`; `cedar@4` for `policy`; `agentskills` for `skill`. |
+| `standard` | string | Required | `agentspec@26.3.1` for `agent`; `agent-harness@0.2.0` for `harness` and `acceptance`; `cedar@4` for `policy`; `agentskills` for `skill`. |
 | `sha256` | string | Required | `hex(SHA-256(file bytes))` of the file exactly as stored. |
 
 Rules:
 
 1. There MUST be exactly one entry each with role `agent`, `harness`, `policy` and `acceptance`, and at least one entry with role `skill`. Paths MUST be unique.
 2. The paths for roles `agent`, `harness`, `policy` and `acceptance` MUST be `agent.json`, `harness.json`, `policy.cedar` and `acceptance.json`. A skill path MUST match `skills/<name>/SKILL.md`, where `<name>` is the skill's `name` [AGENT-SKILLS].
-3. Every file in the bundle directory other than `recipe.json` MUST be listed. A consumer MUST NOT load a file that is not listed. A consumer MUST NOT follow symbolic links inside a bundle.
+3. Every file in the bundle directory other than `template.json` MUST be listed. A consumer MUST NOT load a file that is not listed. A consumer MUST NOT follow symbolic links inside a bundle.
 4. The digest covers the bytes as stored; there is no normalization of line endings or encodings. Producers SHOULD store all text files as UTF-8 with LF line endings and SHOULD configure version control so that checkouts do not rewrite line endings.
 5. A consumer MUST verify every digest before using the bundle and MUST reject the bundle if any digest differs.
-6. The *recipe digest* is `hex(SHA-256(recipe.json bytes))`. Because `recipe.json` lists the digests of all other files, the recipe digest identifies the whole bundle. Harnesses record it when a run starts ([Section 12.4](#124-event-types)).
+6. The *template digest* is `hex(SHA-256(template.json bytes))`. Because `template.json` lists the digests of all other files, the template digest identifies the whole bundle. Harnesses record it when a run starts ([Section 12.4](#124-event-types)).
 
 ### 5.4 Provenance
 
@@ -325,7 +327,7 @@ A bundle produced by a coding agent SHOULD name that agent in `generated_by`. A 
 Skills are Agent Skills [AGENT-SKILLS] directories containing a `SKILL.md` file with YAML front matter (`name`, `description`, and optional `license`, `compatibility`, `metadata`, `allowed-tools`) followed by Markdown instructions.
 
 1. Each skill MUST pass `skills-ref validate` [SKILLS-REF].
-2. Skills in a recipe MUST be instruction-only: a skill directory MUST NOT contain a `scripts/` directory or other executable code (lint checks for `scripts/`). Agent Skills permits `scripts/`; this profile forbids it in recipes so that deploying a recipe never runs code that was not reviewed as code.
+2. Skills in a template MUST be instruction-only: a skill directory MUST NOT contain a `scripts/` directory or other executable code (lint checks for `scripts/`). Agent Skills permits `scripts/`; this profile forbids it in templates so that deploying a template never runs code that was not reviewed as code.
 3. A skill MUST NOT instruct a person or an agent to download and run a binary, to pipe a downloaded script to a shell, or to modify agent or editor configuration files.
 4. The Agent Skills `allowed-tools` field is described by its specification as experimental. A harness MUST NOT treat `allowed-tools` as an authorization mechanism; tool authorization is governed only by [Section 8](#8-tool-classification), [Section 9](#9-policy) and [Section 10](#10-approval).
 
@@ -353,7 +355,7 @@ and `harness.json` MUST carry `"agent_ref"` equal to the Agent component's `id`.
 
 ### 6.3 Model Binding
 
-A recipe MUST NOT name a specific model. The model is chosen by the deployer.
+A template MUST NOT name a specific model. The model is chosen by the deployer.
 
 Agent Spec 26.3.1 defines symbolic references (an object with the single property `$component_ref` whose value is a component id) and *disaggregated components*: components that are kept out of the main configuration and supplied when it is deserialized. The language specification states that "additional disaggregated components that are not part of any exported configuration (e.g., those containing potentially sensitive information) can be additionally provided at deserialization time by the SDK or the Runtime performing it", and the Agent Spec documentation describes this mechanism for keeping LLM configurations out of the main configuration.
 
@@ -365,21 +367,21 @@ The Agent component in `agent.json` MUST therefore set:
 
 and MUST NOT include an LLM configuration, inline or in `$referenced_components`. The deployer supplies an `LlmConfig` component (for example an `OpenAiCompatibleConfig`) for the reference `llm` at load time. With `pyagentspec` 26.3.1 this is done by passing a `components_registry` that maps `"llm"` to the deployer's `LlmConfig` when deserializing with `AgentSpecDeserializer`. Agent Spec requires deserialization to fail when a referenced component is not supplied, so a harness cannot start the agent without a deployer-chosen model.
 
-A recipe MUST NOT contain an API key or any other secret. Agent Spec itself treats `api_key` and related fields as sensitive fields that are excluded on export.
+A template MUST NOT contain an API key or any other secret. Agent Spec itself treats `api_key` and related fields as sensitive fields that are excluded on export.
 
 `harness.json` states the capabilities the deployer's model must have ([Section 7.7](#77-chapter-6-model-and-budget-model)), never a model name.
 
 ### 6.4 Tools
 
 1. Every tool the agent can call MUST be declared in the Agent's `tools` array as an Agent Spec tool component (for example `ServerTool`, `ClientTool`, `RemoteTool` or `MCPTool`). The tool's Agent Spec `name` is the name used by `harness.json`, by Cedar actions and in audit events.
-2. Tool names MUST match `^[A-Za-z0-9_-]{1,64}$`. This is the intersection of the function-name rule of the OpenAI API (letters, digits, underscores and dashes, at most 64 characters) [OPENAI-FUNCTION-NAME], the tool-name rule of the Claude API (`^[a-zA-Z0-9_-]{1,128}$`) [CLAUDE-TOOL-NAME] and the MCP tool-name guidance (1 to 128 characters from ASCII letters, digits, `_`, `-` and `.`) [MCP], so that a recipe's tool names can be passed unchanged to any of them. Names SHOULD be snake_case with a service prefix, for example `mail_send` or `pricelist_lookup`.
+2. Tool names MUST match `^[A-Za-z0-9_-]{1,64}$`. This is the intersection of the function-name rule of the OpenAI API (letters, digits, underscores and dashes, at most 64 characters) [OPENAI-FUNCTION-NAME], the tool-name rule of the Claude API (`^[a-zA-Z0-9_-]{1,128}$`) [CLAUDE-TOOL-NAME] and the MCP tool-name guidance (1 to 128 characters from ASCII letters, digits, `_`, `-` and `.`) [MCP], so that a template's tool names can be passed unchanged to any of them. Names SHOULD be snake_case with a service prefix, for example `mail_send` or `pricelist_lookup`.
 3. The set of tool names in `agent.json` and the set of tool names in `harness.json` MUST be equal (lint).
 4. Agent Spec tools have a boolean `requires_confirmation`, which signals that execution environments should require approval before running the tool. A tool whose effective kind is `write` MUST set `requires_confirmation: true` in `agent.json`, so that an Agent Spec runtime that does not implement this profile still asks for confirmation (lint rule `agent.write-requires-confirmation`). A tool with `requires_confirmation: true` MUST NOT have `approval: never` in `harness.json` (lint).
-5. Tools exposed through Agent Spec `toolboxes` (for example an MCP toolbox) are discovered at run time. A tool discovered at run time that has no entry in `harness.json` is unclassified and is therefore a write tool that requires approval ([Section 8.3](#83-unclassified-tools)). Recipes SHOULD enumerate every tool in `tools`.
+5. Tools exposed through Agent Spec `toolboxes` (for example an MCP toolbox) are discovered at run time. A tool discovered at run time that has no entry in `harness.json` is unclassified and is therefore a write tool that requires approval ([Section 8.3](#83-unclassified-tools)). Templates SHOULD enumerate every tool in `tools`.
 
 ### 6.5 Discovery (Informative)
 
-An A2A 1.0.0 Agent Card [A2A] can be generated from a recipe: the card's name and description from the Agent component and `role`, its skills from the Agent Skills and `role.duties`, and its interfaces from the deployment. This profile does not specify the mapping in 0.1.0.
+An A2A 1.0.0 Agent Card [A2A] can be generated from a template: the card's name and description from the Agent component and `role`, its skills from the Agent Skills and `role.duties`, and its interfaces from the deployment. This profile does not specify the mapping in 0.2.0.
 
 ---
 
@@ -389,12 +391,12 @@ An A2A 1.0.0 Agent Card [A2A] can be generated from a recipe: the card's name an
 
 ### 7.1 Overview
 
-`harness.json` describes, in six chapters, what Agent Spec does not: the role the agent plays, what it may read, what each tool is allowed to do, the work steps, the boundaries and approval rules, and the model requirements and budget. Schema: `schemas/0.1/harness.schema.json`.
+`harness.json` describes, in six chapters, what Agent Spec does not: the role the agent plays, what it may read, what each tool is allowed to do, the work steps, the boundaries and approval rules, and the model requirements and budget. Schema: `schemas/0.2/harness.schema.json`.
 
 | Field | Type | Requirement | Meaning |
 |---|---|---|---|
-| `$schema` | string | Recommended | When present, MUST be `https://orbanplatform.com/agent-harness/schemas/0.1/harness.schema.json`. |
-| `profile_version` | string | Required | MUST be `0.1.0`. |
+| `$schema` | string | Recommended | When present, MUST be `https://orbanplatform.com/agent-harness/schemas/0.2/harness.schema.json`. |
+| `profile_version` | string | Required | MUST be `0.2.0`. |
 | `agent_ref` | string | Required | The `id` of the Agent component in `agent.json`. |
 | `role` | object | Required | Chapter 1, role and voice. |
 | `knowledge` | array | Required (MAY be empty) | Chapter 2, knowledge sources. |
@@ -426,7 +428,7 @@ Each entry describes one source the agent may read. Writes happen only through t
 | `name` | string | Required | Short unique name of the source. |
 | `description` | string | Recommended | What the source contains and how current it is. |
 | `kind` | string | Required | One of `document`, `database`, `api`, `web`. |
-| `access` | string | Required | MUST be `read`. No other value is defined in 0.1.0. |
+| `access` | string | Required | MUST be `read`. No other value is defined in 0.2.0. |
 | `citation` | string | Required | One of `required`, `recommended`, `none`: whether answers drawn from the source must cite it. |
 
 A source of kind `web` is untrusted input by definition.
@@ -459,8 +461,8 @@ Normative rules (lint):
 
 Rules for harnesses:
 
-5. For `over_limit`, the harness evaluates the limit as follows. If `arguments[limit.field]` is absent, is not a JSON number, or is greater than `limit.max`, the call is *over the limit* and requires approval. Otherwise the call is *within the limit*. The result is passed to Cedar as `context.limit_exceeded` ([Section 9.3](#93-request-construction)). The harness MUST NOT attempt unit conversion; recipes SHOULD constrain the unit in the tool's input schema.
-6. A recipe SHOULD state in `boundaries.never` that the agent must not split one action into several to stay under a limit, and SHOULD include an acceptance sample for that case.
+5. For `over_limit`, the harness evaluates the limit as follows. If `arguments[limit.field]` is absent, is not a JSON number, or is greater than `limit.max`, the call is *over the limit* and requires approval. Otherwise the call is *within the limit*. The result is passed to Cedar as `context.limit_exceeded` ([Section 9.3](#93-request-construction)). The harness MUST NOT attempt unit conversion; templates SHOULD constrain the unit in the tool's input schema.
+6. A template SHOULD state in `boundaries.never` that the agent must not split one action into several to stay under a limit, and SHOULD include an acceptance sample for that case.
 
 ### 7.5 Chapter 4: Work Steps (`workflow`)
 
@@ -578,7 +580,7 @@ MCP 2026-07-28 defines `ToolAnnotations` with `title`, `readOnlyHint` (default `
 
 > For trust & safety and security, clients **MUST** consider tool annotations to be untrusted unless they come from trusted servers.
 
-This profile goes further: annotations never determine the effective kind, even from a trusted server. A tool or configuration editor MAY use annotations to suggest a classification for an operator to confirm. The RECOMMENDED suggestion is `read` with `approval: never` when `readOnlyHint` is `true`, and otherwise `write` with `approval: always`. A suggestion becomes effective only when an operator sets `classification.source` to `operator`. The reference implementation is `reference/classify.mjs`; the test vectors are `test-vectors/0.1/classification.json`.
+This profile goes further: annotations never determine the effective kind, even from a trusted server. A tool or configuration editor MAY use annotations to suggest a classification for an operator to confirm. The RECOMMENDED suggestion is `read` with `approval: never` when `readOnlyHint` is `true`, and otherwise `write` with `approval: always`. A suggestion becomes effective only when an operator sets `classification.source` to `operator`. The reference implementation is `reference/classify.mjs`; the test vectors are `test-vectors/0.2/classification.json`.
 
 ### 8.5 Pinning Tool Definitions
 
@@ -596,7 +598,7 @@ A tool's description and input schema are read by the model and are a channel fo
 
 ### 9.2 Cedar Schema
 
-The profile's Cedar schema is `schemas/0.1/harness.cedarschema`, in namespace `OrbanHarness`. It declares:
+The profile's Cedar schema is `schemas/0.2/harness.cedarschema`, in namespace `OrbanHarness`. It declares:
 
 - entity types `Agent` (agent principals), `Human` (human principals) and `Tool` (resources);
 - one action per tool name, for example `OrbanHarness::Action::"mail_send"`;
@@ -616,7 +618,7 @@ The profile's Cedar schema is `schemas/0.1/harness.cedarschema`, in namespace `O
 }
 ```
 
-The base schema contains no actions. A recipe's *effective schema* is the base schema with one declaration per `harness.json` tool, in `harness.json` order, inserted at the `@tool-actions` marker line:
+The base schema contains no actions. A template's *effective schema* is the base schema with one declaration per `harness.json` tool, in `harness.json` order, inserted at the `@tool-actions` marker line:
 
 ```
 action "<tool name>" appliesTo {
@@ -646,7 +648,7 @@ Every context value is set only by the harness: approval values from validated r
 
 ### 9.4 Policies
 
-A recipe's `policy.cedar`:
+A template's `policy.cedar`:
 
 1. MUST permit read tools for the agent principal, for example:
 
@@ -722,7 +724,7 @@ For the policies above, with `d` the arguments digest:
 | `ledger_post_adjustment` | `true` | granted, `enforced_identity = d` | Allow | `write-tools-within-limit-or-approved` |
 | `calendar_book` (not permitted) | any | any | Deny | default deny |
 
-The two principals in these examples come from different recipes and are shown together only for brevity.
+The two principals in these examples come from different templates and are shown together only for brevity.
 
 ---
 
@@ -750,7 +752,7 @@ A harness built on ACS MAY produce the resolvable deny through ACS mechanisms (f
 
 ### 10.2 ApprovalRequest
 
-Schema: `schemas/0.1/approval-request.schema.json`.
+Schema: `schemas/0.2/approval-request.schema.json`.
 
 | Field | Type | Requirement | Meaning |
 |---|---|---|---|
@@ -764,7 +766,7 @@ Schema: `schemas/0.1/approval-request.schema.json`.
 | `idempotency_key` | string | Required | The ledger key of the action ([Section 11](#11-exactly-once-writes)). |
 | `summary` | object | Required | Three plain sentences: `done` (what has been done), `decide` (what needs the approver's decision) and `after` (what happens after approval). |
 | `routing` | object | Required | `path` (`named`, `list` or `fallback`) and `approvers` (array of at least one human principal id). |
-| `policy_ref` | string | Required | The policy or rule that produced the resolvable deny, for example the recipe id with the Cedar `@id`, or `harness:approval=always`. |
+| `policy_ref` | string | Required | The policy or rule that produced the resolvable deny, for example the template id with the Cedar `@id`, or `harness:approval=always`. |
 
 The arguments themselves are not part of the record. The harness MUST present the arguments, or a faithful rendering of all of them, to the approver from its own store, and MUST verify before presenting that they hash to `arguments_digest`.
 
@@ -776,11 +778,11 @@ The arguments themselves are not part of the record. The harness MUST present th
 | `list` | Any one of the listed approvers may decide. The first valid decision wins. |
 | `fallback` | The named approver was unavailable and the request was routed to fallback approvers. |
 
-`summary` text MUST be generated by the harness from the arguments and the recipe (for example from a template), or, if a model writes it, the approver MUST also be shown the arguments in full. A summary written by the agent alone is untrusted input ([Section 17.1](#171-prompt-injection)).
+`summary` text MUST be generated by the harness from the arguments and the template (for example from a template), or, if a model writes it, the approver MUST also be shown the arguments in full. A summary written by the agent alone is untrusted input ([Section 17.1](#171-prompt-injection)).
 
 ### 10.3 ApprovalDecision
 
-Schema: `schemas/0.1/approval-decision.schema.json`.
+Schema: `schemas/0.2/approval-decision.schema.json`.
 
 | Field | Type | Requirement | Meaning |
 |---|---|---|---|
@@ -789,7 +791,7 @@ Schema: `schemas/0.1/approval-decision.schema.json`.
 | `decided_by` | string | Required | Principal id of the human who decided. |
 | `decided_at` | string | Required | RFC 3339 time of the decision. |
 | `enforced_identity` | string | Required | MUST equal the request's `arguments_digest`. |
-| `scope` | string | Required | MUST be `once`. No other scope is defined in 0.1.0. |
+| `scope` | string | Required | MUST be `once`. No other scope is defined in 0.2.0. |
 | `channel` | string | Required | `console`, `email_link`, `api` or `other`. |
 | `reason` | string | Opt-In | Free text from the approver. Treated as personal data ([Section 18](#18-privacy-considerations)). |
 | `decided_by_dispatcher` | boolean | Required | `true` if and only if `decided_by` is the request's `dispatcher`. |
@@ -832,7 +834,7 @@ A harness MUST NOT execute an action whose arguments differ in any way from the 
 
 ### 10.6 Calls Within an `over_limit` Limit
 
-A tool with `approval: over_limit` carries a limit that the deployer accepted when deploying the recipe. A call within that limit needs no per-call approval:
+A tool with `approval: over_limit` carries a limit that the deployer accepted when deploying the template. A call within that limit needs no per-call approval:
 
 1. The harness evaluates Cedar with no approval and `limit_exceeded: false`. The `over_limit` permit of [Section 9.4](#94-policies) allows the call; any applicable `forbid` still denies it.
 2. No ApprovalRequest is created. The ledger entry moves from `intent` directly to `executed` or `failed` with `approval_request_id` `null`, and the `action.executed` audit event records `"approval": "within_limit"`.
@@ -842,7 +844,7 @@ The limit is an advance decision by the deployer, visible in `harness.json` and 
 
 ### 10.7 State Machine
 
-An ApprovalRequest is in exactly one of the states `pending`, `approved`, `denied`, `expired`, `cancelled`, `executed` and `failed`. The terminal states are `denied`, `expired`, `cancelled`, `executed` and `failed`. The following table lists every allowed transition. Every transition not listed is invalid: a harness MUST reject it and MUST NOT change the state. The test vectors are `test-vectors/0.1/approval-transitions.json`.
+An ApprovalRequest is in exactly one of the states `pending`, `approved`, `denied`, `expired`, `cancelled`, `executed` and `failed`. The terminal states are `denied`, `expired`, `cancelled`, `executed` and `failed`. The following table lists every allowed transition. Every transition not listed is invalid: a harness MUST reject it and MUST NOT change the state. The test vectors are `test-vectors/0.2/approval-transitions.json`.
 
 | # | From | Trigger | Guard | To | Audit event | Ledger state after |
 |---|---|---|---|---|---|---|
@@ -983,7 +985,7 @@ This profile adopts the `Idempotency-Key` request header field of `draft-ietf-ht
 
 ### 11.3 Ledger Entry
 
-Schema: `schemas/0.1/ledger-entry.schema.json`.
+Schema: `schemas/0.2/ledger-entry.schema.json`.
 
 | Field | Type | Requirement | Meaning |
 |---|---|---|---|
@@ -1003,7 +1005,7 @@ Ledger states `intent` and `approved` are *in flight*; the others are *terminal*
 
 ### 11.4 Decision Function
 
-Given the existing entry for (scope, key), or none, and an incoming action `{key, fingerprint, task_id, kind}`, the outcome is determined by the first matching row. The reference implementation is `reference/ledger.mjs`; the test vectors are `test-vectors/0.1/idempotency.json`.
+Given the existing entry for (scope, key), or none, and an incoming action `{key, fingerprint, task_id, kind}`, the outcome is determined by the first matching row. The reference implementation is `reference/ledger.mjs`; the test vectors are `test-vectors/0.2/idempotency.json`.
 
 | # | Condition | Outcome | HTTP status | Effect |
 |---|---|---|---|---|
@@ -1033,10 +1035,10 @@ When a harness exposes write actions over HTTP, or calls a downstream HTTP API:
 
 | Outcome | Status | Problem `type` |
 |---|---|---|
-| `missing_key` | 400 | `https://orbanplatform.com/agent-harness/0.1/problems/missing_key` |
-| `fingerprint_mismatch` | 422 | `https://orbanplatform.com/agent-harness/0.1/problems/fingerprint_mismatch` |
-| `in_flight` | 409 | `https://orbanplatform.com/agent-harness/0.1/problems/in_flight` |
-| `task_mismatch` | 409 | `https://orbanplatform.com/agent-harness/0.1/problems/task_mismatch` |
+| `missing_key` | 400 | `https://orbanplatform.com/agent-harness/0.2/problems/missing_key` |
+| `fingerprint_mismatch` | 422 | `https://orbanplatform.com/agent-harness/0.2/problems/fingerprint_mismatch` |
+| `in_flight` | 409 | `https://orbanplatform.com/agent-harness/0.2/problems/in_flight` |
+| `task_mismatch` | 409 | `https://orbanplatform.com/agent-harness/0.2/problems/task_mismatch` |
 
 - A replay returns the stored status and body.
 
@@ -1065,7 +1067,7 @@ The `_meta` key follows the MCP rule that implementations use reverse-DNS prefix
 
 ### 12.1 Envelope
 
-Every audit event MUST be a CloudEvents 1.0.2 event [CLOUDEVENTS] in the JSON event format [CE-JSON] (media type `application/cloudevents+json`). Schema: `schemas/0.1/audit-event.schema.json`.
+Every audit event MUST be a CloudEvents 1.0.2 event [CLOUDEVENTS] in the JSON event format [CE-JSON] (media type `application/cloudevents+json`). Schema: `schemas/0.2/audit-event.schema.json`.
 
 ### 12.2 Attributes
 
@@ -1097,11 +1099,11 @@ One `source` value identifies one append-only sequence of events with one hash c
 
 ### 12.4 Event Types
 
-Version 0.1.0 defines the following eight types. The data members listed are RECOMMENDED; the personal data rules of [Section 12.10](#1210-personal-data-in-audit-events) apply to all of them.
+Version 0.2.0 defines the following eight types. The data members listed are RECOMMENDED; the personal data rules of [Section 12.10](#1210-personal-data-in-audit-events) apply to all of them.
 
 | `type` suffix | When | Recommended `data` members |
 |---|---|---|
-| `run.started` | A run starts. | `run_id`, `task_id`, `agent_id`, `recipe_id`, `recipe_digest` |
+| `run.started` | A run starts. | `run_id`, `task_id`, `agent_id`, `template_id`, `template_digest` |
 | `run.completed` | A run ends. | `run_id`, `outcome` (`completed`, `failed`, `cancelled`, `paused`) |
 | `approval.requested` | An ApprovalRequest is created. | `approval_request_id`, `tool`, `arguments_digest`, `idempotency_key`, `expires_at`, `routing_path` |
 | `approval.decided` | A decision is accepted. | `approval_request_id`, `decision`, `decided_by`, `decided_by_dispatcher`, `channel`, `enforced_identity` |
@@ -1122,7 +1124,7 @@ event_i.orbanprevhash = h_{i-1}
 h_i = hex(SHA-256(JCS(event_i)))
 ```
 
-`JCS(event_i)` is computed over the complete event object as stored, including `data`, `orbanprevhash` and every extension attribute. The chain head is `h_n`. The test vectors are `test-vectors/0.1/jcs.json` and `test-vectors/0.1/audit-chain.json`; the reference implementations are `reference/jcs.mjs` and `reference/audit.mjs`.
+`JCS(event_i)` is computed over the complete event object as stored, including `data`, `orbanprevhash` and every extension attribute. The chain head is `h_n`. The test vectors are `test-vectors/0.2/jcs.json` and `test-vectors/0.2/audit-chain.json`; the reference implementations are `reference/jcs.mjs` and `reference/audit.mjs`.
 
 The chain lets a holder of a contiguous range of events detect any change, insertion or deletion within it. It does not by itself protect against the operator rewriting the entire log; that requires signed checkpoints that have been published elsewhere ([Section 12.8](#128-external-anchoring)).
 
@@ -1164,7 +1166,7 @@ The signed note is the note text, an empty line, and one or more signature lines
 4. A checkpoint MUST NOT be signed if it is inconsistent with a checkpoint previously signed with the same key (that is, if the earlier tree is not a prefix of the later tree).
 5. Extension lines are NOT RECOMMENDED.
 
-The reference implementation is `reference/checkpoint.mjs`; the test vectors are in `test-vectors/0.1/audit-chain.json`.
+The reference implementation is `reference/checkpoint.mjs`; the test vectors are in `test-vectors/0.2/audit-chain.json`.
 
 ### 12.8 External Anchoring
 
@@ -1178,7 +1180,7 @@ A signed checkpoint protects against later rewriting only if a copy of it is hel
 
 A verifier holding a sequence of events from one source, a signed checkpoint and the trusted verifier key MUST perform these steps, and MUST report failure at the first step that fails:
 
-1. Validate each event against `schemas/0.1/audit-event.schema.json`.
+1. Validate each event against `schemas/0.2/audit-event.schema.json`.
 2. Check that every event has the same `source`, that `orbanalg` is `sha256-jcs-v1`, and that `id` values are unique.
 3. Check that `sequence` values are the 20-digit decimal strings `00000000000000000001`, `00000000000000000002`, … with no gap or repetition.
 4. Compute `h_i` for each event ([Section 12.5](#125-hash-chain)). Check that `event_1.orbanprevhash` is 64 × `0` and that each later `event_i.orbanprevhash` equals `h_{i-1}`.
@@ -1235,13 +1237,13 @@ This section uses the vocabulary of [ANTHROPIC-EVALS]: a *task* is "a single tes
 
 ### 14.2 acceptance.json
 
-Schema: `schemas/0.1/acceptance.schema.json`. Sample field names follow the UK AISI Inspect `Sample` (`id`, `input`, `target`, `metadata`, `files`, `setup`, `sandbox`, `description`) [INSPECT], so that samples can be loaded into Inspect with little or no change.
+Schema: `schemas/0.2/acceptance.schema.json`. Sample field names follow the UK AISI Inspect `Sample` (`id`, `input`, `target`, `metadata`, `files`, `setup`, `sandbox`, `description`) [INSPECT], so that samples can be loaded into Inspect with little or no change.
 
 | Field | Type | Requirement | Meaning |
 |---|---|---|---|
 | `$schema` | string | Recommended | The schema URI. |
-| `profile_version` | string | Required | `0.1.0`. |
-| `recipe_id` | string | Required | MUST equal `recipe.json` `id`. |
+| `profile_version` | string | Required | `0.2.0`. |
+| `template_id` | string | Required | MUST equal `template.json` `id`. |
 | `samples` | array | Required | At least one sample. |
 
 Each sample:
@@ -1271,7 +1273,7 @@ Additional `metadata` members are allowed.
 | `must_ask` | boolean | Opt-In | `true` if the agent MUST stop and ask or escalate to a human; `false` if it MUST NOT. |
 | `outcome_includes` | array of string | Opt-In | Content the outcome MUST contain. |
 | `outcome_excludes` | array of string | Opt-In | Content the outcome MUST NOT contain. |
-| `forbidden_targets` | array of string | Opt-In | Attacker-chosen targets (recipients, accounts, URLs) that MUST NOT appear in the arguments of any tool call or in any approval request in the trial. Published recipes use `example.com`, `example.org` or `example.net` values. |
+| `forbidden_targets` | array of string | Opt-In | Attacker-chosen targets (recipients, accounts, URLs) that MUST NOT appear in the arguments of any tool call or in any approval request in the trial. Published templates use `example.com`, `example.org` or `example.net` values. |
 | `max_executions` | object | Opt-In | Map from tool name to the maximum number of executions in the trial. |
 
 ### 14.3 Scenarios
@@ -1290,7 +1292,7 @@ Additional `metadata` members are allowed.
 1. At least one sample MUST have scenario `injection`. At least one injection sample MUST list every write tool in `expect.must_not_call`, or MUST assert a non-empty `expect.forbidden_targets`.
 2. Every write tool MUST appear in `expect.approvals_requested` of at least one sample.
 3. Every sample with scenario `interruption` MUST set `expect.max_executions`, MUST bound each write tool it exercises (through `must_call` or `approvals_requested`), and MUST NOT allow any write tool more than one execution.
-4. Sample ids MUST be unique, and `recipe_id` MUST equal the `id` in `recipe.json`.
+4. Sample ids MUST be unique, and `template_id` MUST equal the `id` in `template.json`.
 
 When grading an `interruption` sample, the grader MUST also check, from the ledger or audit log, that each idempotency key reached `executed` at most once.
 
@@ -1300,10 +1302,10 @@ A harness under test SHOULD run each sample for k ≥ 3 trials. A sample is repo
 
 Results MAY be published as an in-toto Statement [IN-TOTO] with predicate type `https://in-toto.io/attestation/test-result/v0.1` [IN-TOTO-TEST-RESULT]:
 
-- `subject`: the recipe files, each with its `sha256` digest from `recipe.json`;
+- `subject`: the template files, each with its `sha256` digest from `template.json`;
 - `predicate.result`: `PASSED`, `WARNED` or `FAILED`;
 - `predicate.configuration`: resource descriptors for `acceptance.json` and for the harness and model configuration used (without secrets);
-- `predicate.passedTests`, `predicate.warnedTests`, `predicate.failedTests`: test names of the form `<recipe_id>/<sample id>`.
+- `predicate.passedTests`, `predicate.warnedTests`, `predicate.failedTests`: test names of the form `<template_id>/<sample id>`.
 
 ---
 
@@ -1313,16 +1315,16 @@ Results MAY be published as an in-toto Statement [IN-TOTO] with predicate type `
 
 ### 15.1 Integrity and Provenance
 
-`recipe.json` provides integrity: it lists the SHA-256 digest of every file ([Section 5.3](#53-file-entries-and-digests)). Provenance (who produced a file, from which source, by which workflow) is provided by attestations:
+`template.json` provides integrity: it lists the SHA-256 digest of every file ([Section 5.3](#53-file-entries-and-digests)). Provenance (who produced a file, from which source, by which workflow) is provided by attestations:
 
-1. Releases of recipes SHOULD be accompanied by in-toto Attestation Framework v1 Statements [IN-TOTO] whose subjects are the recipe files with their SHA-256 digests, wrapped in DSSE envelopes [DSSE] and distributed as Sigstore bundles [SIGSTORE-BUNDLE] (media type `application/vnd.dev.sigstore.bundle.v0.3+json`).
-2. On GitHub, this is done with GitHub artifact attestations [GH-ATTESTATIONS]: a release workflow with permissions `id-token: write`, `attestations: write` and `contents: read` runs `actions/attest@v4` with the recipe files as subjects. This repository's `.github/workflows/release.yml` attests the files of the example recipes and the schemas.
+1. Releases of templates SHOULD be accompanied by in-toto Attestation Framework v1 Statements [IN-TOTO] whose subjects are the template files with their SHA-256 digests, wrapped in DSSE envelopes [DSSE] and distributed as Sigstore bundles [SIGSTORE-BUNDLE] (media type `application/vnd.dev.sigstore.bundle.v0.3+json`).
+2. On GitHub, this is done with GitHub artifact attestations [GH-ATTESTATIONS]: a release workflow with permissions `id-token: write`, `attestations: write` and `contents: read` runs `actions/attest@v4` with the template files as subjects. This repository's `.github/workflows/release.yml` attests the files of the example templates and the schemas.
 
 ### 15.2 How a Recipient Verifies
 
 1. Obtain the bundle from its source repository or release, not from an intermediary.
 2. Verify the attestation of each file. With the GitHub CLI: `gh attestation verify <file> -R <owner>/<repository>`. With other Sigstore clients, verify the bundle against the expected signer identity (the repository and workflow).
-3. Verify every digest in `recipe.json` ([Section 5.3](#53-file-entries-and-digests)), and verify that `recipe.json` itself is covered by a verified attestation.
+3. Verify every digest in `template.json` ([Section 5.3](#53-file-entries-and-digests)), and verify that `template.json` itself is covered by a verified attestation.
 4. Run the L1 conformance check ([Section 16](#16-conformance)).
 5. Review the bundle, in particular `harness.json` chapters 3 and 5 and `policy.cedar`, before deploying.
 
@@ -1336,22 +1338,22 @@ Verification never requires running a program obtained from the bundle. Recipien
 
 ### 16.1 Conformance Targets
 
-There are two kinds of conformance targets: **recipes** (bundles), which can conform at level L1, and **harnesses** (runtimes), which can conform at levels L2 and L3. Levels are cumulative: a harness at L3 also meets L2, and a harness at L2 accepts only recipes that meet L1.
+There are two kinds of conformance targets: **templates** (bundles), which can conform at level L1, and **harnesses** (runtimes), which can conform at levels L2 and L3. Levels are cumulative: a harness at L3 also meets L2, and a harness at L2 accepts only templates that meet L1.
 
 ### 16.2 Levels
 
-**L1 Describe** (recipes). A recipe conforms at L1 if:
+**L1 Describe** (templates). A template conforms at L1 if:
 
-1. `recipe.json`, `harness.json` and `acceptance.json` validate against their schemas in `schemas/0.1/`;
-2. every digest in `recipe.json` matches ([Section 5.3](#53-file-entries-and-digests)), and the bundle contains no unlisted files;
+1. `template.json`, `harness.json` and `acceptance.json` validate against their schemas in `schemas/0.2/`;
+2. every digest in `template.json` matches ([Section 5.3](#53-file-entries-and-digests)), and the bundle contains no unlisted files;
 3. all lint rules of this document pass (Sections 6.2, 6.4, 7.4, 7.6, 7.7 and 14.4);
 4. `policy.cedar` validates against the effective Cedar schema in strict mode, and for every write tool Cedar denies a call that has no approval bound to its arguments (for a tool with `approval: over_limit`, when `limit_exceeded` is `true`) ([Section 9](#9-policy));
 5. every `SKILL.md` passes `skills-ref validate`, and no skill directory contains a `scripts/` directory;
 6. `agent.json` loads with `AgentSpecDeserializer` from `pyagentspec` 26.3.1, given a `components_registry` that supplies a placeholder `LlmConfig` for the reference `llm`.
 
-Note on item 6: the JSON Schema published with Agent Spec 26.3.1 rejects documents that carry the top-level `agentspec_version` property that Agent Spec serializations include (its `BaseAgent` definition disallows additional properties and does not list `agentspec_version`), and the schema on the Agent Spec main branch (26.4.0) behaves the same way. This profile therefore does not validate `agent.json` against that JSON Schema; loading with `pyagentspec` is the check of Agent Spec validity. The Node.js runner does not load Python packages and reports this check as not performed; this repository's CI performs it, and a party claiming L1 for its own recipe performs it with `pyagentspec` 26.3.1.
+Note on item 6: the JSON Schema published with Agent Spec 26.3.1 rejects documents that carry the top-level `agentspec_version` property that Agent Spec serializations include (its `BaseAgent` definition disallows additional properties and does not list `agentspec_version`), and the schema on the Agent Spec main branch (26.4.0) behaves the same way. This profile therefore does not validate `agent.json` against that JSON Schema; loading with `pyagentspec` is the check of Agent Spec validity. The Node.js runner does not load Python packages and reports this check as not performed; this repository's CI performs it, and a party claiming L1 for its own template performs it with `pyagentspec` 26.3.1.
 
-**L2 Gate** (harnesses). A harness conforms at L2 if it accepts only L1 recipes and enforces:
+**L2 Gate** (harnesses). A harness conforms at L2 if it accepts only L1 templates and enforces:
 
 1. tool classification: an unclassified tool is a write tool ([Section 8](#8-tool-classification));
 2. approval for every write as configured in `harness.json` ([Section 10.5](#105-gate-procedure));
@@ -1361,7 +1363,7 @@ Note on item 6: the JSON Schema published with Agent Spec 26.3.1 rejects documen
 6. that timeout yields `expired`, which is a deny;
 7. the state machine of [Section 10.7](#107-state-machine).
 
-L2 test vectors: `test-vectors/0.1/classification.json`, `test-vectors/0.1/approval-transitions.json`, and the Cedar decisions of the example recipes.
+L2 test vectors: `test-vectors/0.2/classification.json`, `test-vectors/0.2/approval-transitions.json`, and the Cedar decisions of the example templates.
 
 **L3 Prove** (harnesses). A harness conforms at L3 if it conforms at L2 and implements:
 
@@ -1369,7 +1371,7 @@ L2 test vectors: `test-vectors/0.1/classification.json`, `test-vectors/0.1/appro
 2. the audit envelope, hash chain and Merkle tree of [Section 12](#12-audit);
 3. signed checkpoints and external anchoring ([Sections 12.7 and 12.8](#127-signed-checkpoints)), producing output that passes the verification procedure of [Section 12.9](#129-verification-procedure).
 
-L3 test vectors: `test-vectors/0.1/jcs.json`, `test-vectors/0.1/idempotency.json` and `test-vectors/0.1/audit-chain.json`.
+L3 test vectors: `test-vectors/0.2/jcs.json`, `test-vectors/0.2/idempotency.json` and `test-vectors/0.2/audit-chain.json`.
 
 ### 16.3 The Conformance Runner
 
@@ -1377,22 +1379,22 @@ The runner is `scripts/conformance.mjs` in this repository (Node.js 22 or later)
 
 ```
 npm ci
-node scripts/conformance.mjs l1 <recipe-dir>     # check one recipe bundle at L1
+node scripts/conformance.mjs l1 <template-dir>     # check one template bundle at L1
 node scripts/conformance.mjs vectors             # run the reference implementation against all test vectors
 npm test                                         # everything the repository's CI runs
 ```
 
-The bundles in `test-vectors/0.1/recipes/invalid-*/` MUST fail L1; each contains a README line stating why.
+The bundles in `test-vectors/0.2/templates/invalid-*/` MUST fail L1; each contains a README line stating why.
 
-For L2 and L3, the test vectors are the contract. An implementation in any language demonstrates conformance by consuming the JSON files in `test-vectors/0.1/` with its own code and producing, for every vector, exactly the expected output. The reference implementation in `reference/` shows one way to do so and is not itself a harness.
+For L2 and L3, the test vectors are the contract. An implementation in any language demonstrates conformance by consuming the JSON files in `test-vectors/0.2/` with its own code and producing, for every vector, exactly the expected output. The reference implementation in `reference/` shows one way to do so and is not itself a harness.
 
 ### 16.4 Claiming a Level
 
 Conformance is self-assessed. Orban Platform Inc. does not certify implementations, does not operate a certification program, and does not maintain a list of approved implementations. A party that claims conformance:
 
-1. MUST state the level, the profile version (`0.1.0`), the name and version of the recipe or implementation, and the commit of this repository whose runner and test vectors were used;
+1. MUST state the level, the profile version (`0.2.0`), the name and version of the template or implementation, and the commit of this repository whose runner and test vectors were used;
 2. MUST have passed every check of the claimed level with that runner and those vectors;
-3. SHOULD publish the runner output, and MAY publish it as an in-toto `test-result/v0.1` Statement whose subject is the recipe or implementation artifact;
+3. SHOULD publish the runner output, and MAY publish it as an in-toto `test-result/v0.1` Statement whose subject is the template or implementation artifact;
 4. MUST NOT describe the claim as a certification, an endorsement, or a statement of legal or regulatory compliance.
 
 ---
@@ -1409,9 +1411,9 @@ The profile instead limits what a successful injection can do:
 
 - Writes are executed only after a human approval bound to the exact arguments, or within a limit the deployer accepted in advance ([Section 10](#10-approval)).
 - Tools that send model-controlled data outside the trust boundary are write tools ([Section 8.1](#81-kinds)).
-- `recipient_binding` lets a recipe take targets from records instead of from model output.
+- `recipient_binding` lets a template take targets from records instead of from model output.
 - Approval summaries are produced by the harness and accompanied by the arguments ([Section 10.2](#102-approvalrequest)).
-- Every recipe carries at least one injection acceptance sample ([Section 14.4](#144-required-samples-lint)).
+- Every template carries at least one injection acceptance sample ([Section 14.4](#144-required-samples-lint)).
 
 Residual risks remain and implementers should state them to deployers:
 
@@ -1423,8 +1425,8 @@ Residual risks remain and implementers should state them to deployers:
 
 ### 17.2 Supply Chain
 
-- **Recipes and skills.** Recipe skills are instruction-only ([Section 5.5](#55-skills)). A skill, recipe or tool that asks the user to download and run a binary, or to pipe a script into a shell, MUST be treated as hostile.
-- **Agent configuration.** Installing a recipe or the skill in this repository MUST NOT modify the user's agent configuration. In particular, nothing in this profile requires, and nothing conforming to it may perform, writes to `~/.claude/settings.json`, its `hooks` section, or the equivalent configuration of any other agent.
+- **Templates and skills.** Template skills are instruction-only ([Section 5.5](#55-skills)). A skill, template or tool that asks the user to download and run a binary, or to pipe a script into a shell, MUST be treated as hostile.
+- **Agent configuration.** Installing a template or the skill in this repository MUST NOT modify the user's agent configuration. In particular, nothing in this profile requires, and nothing conforming to it may perform, writes to `~/.claude/settings.json`, its `hooks` section, or the equivalent configuration of any other agent.
 - **Tool definitions.** Tool descriptions are prompts. Harnesses SHOULD pin the digest of each tool definition at deployment and treat changes as reclassification events ([Section 8.5](#85-pinning-tool-definitions)).
 - **Releases.** Recipients SHOULD verify attestations and digests before use ([Section 15.2](#152-how-a-recipient-verifies)).
 - **Dependencies.** The reference implementation in `reference/` has no runtime dependencies. Development dependencies are pinned to exact versions in `package-lock.json`.
@@ -1450,7 +1452,7 @@ An agent, or an attacker driving it, can generate approval requests to exhaust a
 
 ### 17.7 Canonicalization
 
-Hash and signature checks depend on byte-exact canonicalization. Implementations MUST use RFC 8785 exactly, MUST reject JSON with duplicate member names or numbers that are not representable as IEEE 754 double-precision values, and SHOULD test against `test-vectors/0.1/jcs.json`.
+Hash and signature checks depend on byte-exact canonicalization. Implementations MUST use RFC 8785 exactly, MUST reject JSON with duplicate member names or numbers that are not representable as IEEE 754 double-precision values, and SHOULD test against `test-vectors/0.2/jcs.json`.
 
 ---
 
@@ -1458,13 +1460,13 @@ Hash and signature checks depend on byte-exact canonicalization. Implementations
 
 **Stability: Development**
 
-- **Recipes.** A recipe MUST NOT contain personal data, credentials or secrets. Examples and acceptance samples MUST use fictional names and `example.com`, `example.org` or similar reserved domains.
+- **Templates.** A template MUST NOT contain personal data, credentials or secrets. Examples and acceptance samples MUST use fictional names and `example.com`, `example.org` or similar reserved domains.
 - **Requests and decisions.** Tool arguments, approval summaries and decision reasons routinely contain personal data (names, email addresses, the contents of messages). Harnesses store them under the deployer's data protection obligations, outside the audit log ([Section 12.10](#1210-personal-data-in-audit-events)).
 - **Audit log.** The audit log contains only keyed hashes and references for personal data and untrusted free text, and pseudonymous principal identifiers.
 - **Retention.** Harnesses MUST publish retention periods for arguments, approval records, ledger entries (at least 24 hours after the terminal state; [Section 11.2](#112-additions-in-this-profile)), traces and audit events, and SHOULD keep personal data no longer than the purpose requires.
 - **Deletion.** Erasure deletes the off-chain data and keys and appends `record.redacted`; it does not modify the audit log ([Section 12.10](#1210-personal-data-in-audit-events)).
 - **Traces.** Content-capturing trace attributes are off by default ([Section 13.3](#133-content-capture)).
-- **Model providers.** Data sent to the deployer's model provider is governed by the deployer's agreements with that provider. A recipe cannot and does not control it.
+- **Model providers.** Data sent to the deployer's model provider is governed by the deployer's agreements with that provider. A template cannot and does not control it.
 
 ---
 
@@ -1474,7 +1476,7 @@ Hash and signature checks depend on byte-exact canonicalization. Implementations
 
 This section is informative.
 
-**Microsoft Agent Governance Toolkit (AGT)** [AGT]. AGT, released by Microsoft under the MIT license in April 2026 and described by its README as a public preview, provides a policy engine, `require_approval` policy actions, a tamper-evident Merkle audit log, an MCP security gateway and a Claude Code plugin. Its README states that its policy engine is published upstream as the Agent Control Specification. This profile aligns with AGT on the ACS verdict model ([Section 10.1](#101-verdict-model)). It differs in that it specifies an interchange format for agents (the recipe bundle) and a portable audit format: RFC 8785 canonical events, RFC 9162 leaf and node domain separation, and C2SP signed checkpoints that third parties can verify. The two are intended to be usable together; a harness built on AGT could implement this profile.
+**Microsoft Agent Governance Toolkit (AGT)** [AGT]. AGT, released by Microsoft under the MIT license in April 2026 and described by its README as a public preview, provides a policy engine, `require_approval` policy actions, a tamper-evident Merkle audit log, an MCP security gateway and a Claude Code plugin. Its README states that its policy engine is published upstream as the Agent Control Specification. This profile aligns with AGT on the ACS verdict model ([Section 10.1](#101-verdict-model)). It differs in that it specifies an interchange format for agents (the template bundle) and a portable audit format: RFC 8785 canonical events, RFC 9162 leaf and node domain separation, and C2SP signed checkpoints that third parties can verify. The two are intended to be usable together; a harness built on AGT could implement this profile.
 
 **Oracle Open Agent Specification** [AGENT-SPEC]. Agent Spec defines agents, flows, tools and LLM configurations declaratively and portably. This profile uses Agent Spec unchanged and puts everything else in a sidecar, so that Agent Spec tooling continues to work on `agent.json`.
 
@@ -1494,8 +1496,8 @@ Other efforts address parts of the same space, including agent frameworks with b
 
 ### 20.1 Versions
 
-- The profile uses Semantic Versioning 2.0.0. The version of this document is 0.1.0.
-- The profile URI contains the major and minor version (`https://orbanplatform.com/agent-harness/0.1`). Patch releases do not change it.
+- The profile uses Semantic Versioning 2.0.0. The version of this document is 0.2.0.
+- The profile URI contains the major and minor version (`https://orbanplatform.com/agent-harness/0.2`). Patch releases do not change it.
 - While the major version is 0, breaking changes are made only in minor releases (0.1 → 0.2). Patch releases contain only clarifications and corrections that do not change conforming behaviour.
 - From 1.0.0, breaking changes require a new major version. A deprecated field, value or behaviour remains supported for at least 12 months after the release that deprecates it.
 - Schemas, test vectors and the conformance runner are versioned with the profile; each minor version has its own `schemas/<major.minor>/` and `test-vectors/<major.minor>/` directories.
@@ -1523,7 +1525,7 @@ This appendix shows which mechanisms of this profile relate to controls and risk
 | AC-5 Separation of Duties | Agents never approve; `requester_may_approve: false`; dispatcher self-approval recorded and notified, or prevented with `dispatcher_may_approve: false` ([Section 10.9](#109-separation-of-duties)). |
 | AC-6 Least Privilege | Per-tool classification, read/write distinction, approval modes and limits ([Sections 7.4 and 8](#8-tool-classification)). |
 | AU-9 Protection of Audit Information | Hash chain, Merkle tree, signed checkpoints and external anchoring ([Section 12](#12-audit)). |
-| AU-10 Non-repudiation | Decisions bound to the enforced identity and attributed to an authenticated human; operator-signed checkpoints. Per-approver signatures are not defined in 0.1.0 ([Section 1.4](#14-open-issues)). |
+| AU-10 Non-repudiation | Decisions bound to the enforced identity and attributed to an authenticated human; operator-signed checkpoints. Per-approver signatures are not defined in 0.2.0 ([Section 1.4](#14-open-issues)). |
 | SI-10 Information Input Validation | Validation of arguments against tool input schemas before execution; strict JSON canonicalization ([Sections 10.5 and 17.7](#177-canonicalization)). |
 
 ### A.2 OWASP Top 10 for Agentic Applications (2025-12-09) [OWASP-ASI]
@@ -1560,7 +1562,7 @@ Article 14 applies to high-risk AI systems as defined by Regulation (EU) 2024/16
 
 ### Normative References
 
-- **[AGENT-HOOKS]** Agent Hooks control contract, AGENT-HOOKS-0.1, release v0.1.0-beta.2. https://github.com/responsibleai/agent-hooks/blob/v0.1.0-beta.2/spec/AGENT-HOOKS-0.1.md
+- **[AGENT-HOOKS]** Agent Hooks control contract, AGENT-HOOKS-0.1, release v0.2.0-beta.2. https://github.com/responsibleai/agent-hooks/blob/v0.2.0-beta.2/spec/AGENT-HOOKS-0.1.md
 - **[ACS]** Microsoft, "Agent Control Specification", release v0.4.0-beta.1 (commit `098993763ea2b4c5d1fa4e712be80d73c2ec7b57`; Python package `agent-control-spec` 0.4.0b1). https://github.com/responsibleai/agent-control-spec/tree/v0.4.0-beta.1 ; https://pypi.org/project/agent-control-spec/0.4.0b1/
 - **[AGENT-SKILLS]** Agent Skills specification. https://agentskills.io/specification
 - **[AGENT-SPEC]** Oracle, "Open Agent Specification", version 26.3.1 (tag `agent-spec-26.3.1`; language specification `docs/pyagentspec/source/agentspec/language_spec_26_3_1.rst`; `pyagentspec` 26.3.1, released 2026-09-11). https://github.com/oracle/agent-spec/tree/agent-spec-26.3.1 ; https://pypi.org/project/pyagentspec/26.3.1/

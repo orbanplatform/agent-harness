@@ -1,0 +1,221 @@
+{
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.1.0",
+  "title": "Tool classification (fail closed)",
+  "generated_by": "reference/*.mjs via `node scripts/conformance.mjs vectors --write`",
+  "sources": [
+    "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/schema/2026-07-28/schema.ts (ToolAnnotations)"
+  ],
+  "notes": [
+    "tool is a harness.json tools[] entry and validates against harness.schema.json#/$defs/tool.",
+    "effective_kind is what a runtime enforces. Only classification.source = operator makes the declared kind take effect; otherwise the tool is write.",
+    "suggestion is derived from MCP annotations alone (readOnlyHint true -> read/never, else write/always) and is null without annotations. It never changes effective_kind."
+  ],
+  "cases": [
+    {
+      "id": "operator-write",
+      "description": "operator marks write",
+      "tool": {
+        "name": "mail_send",
+        "kind": "write",
+        "approval": "always",
+        "classification": {
+          "source": "operator"
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": true,
+        "suggestion": null
+      }
+    },
+    {
+      "id": "operator-read",
+      "description": "operator marks read",
+      "tool": {
+        "name": "kb_search",
+        "kind": "read",
+        "approval": "never",
+        "classification": {
+          "source": "operator"
+        }
+      },
+      "expect": {
+        "effective_kind": "read",
+        "operator_classified": true,
+        "suggestion": null
+      }
+    },
+    {
+      "id": "operator-read-wins-over-annotations",
+      "description": "operator read wins even though annotations say not read-only",
+      "tool": {
+        "name": "report_render",
+        "kind": "read",
+        "approval": "never",
+        "classification": {
+          "source": "operator",
+          "mcp_annotations": {
+            "readOnlyHint": false
+          }
+        }
+      },
+      "expect": {
+        "effective_kind": "read",
+        "operator_classified": true,
+        "suggestion": {
+          "kind": "write",
+          "approval": "always"
+        }
+      }
+    },
+    {
+      "id": "operator-write-wins-over-annotations",
+      "description": "operator write wins even though annotations claim read-only",
+      "tool": {
+        "name": "crm_update",
+        "kind": "write",
+        "approval": "always",
+        "classification": {
+          "source": "operator",
+          "mcp_annotations": {
+            "readOnlyHint": true
+          }
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": true,
+        "suggestion": {
+          "kind": "read",
+          "approval": "never"
+        }
+      }
+    },
+    {
+      "id": "annotations-read-only-not-trusted",
+      "description": "kind pre-filled from readOnlyHint: true is only a suggestion; effective kind is write",
+      "tool": {
+        "name": "files_list",
+        "kind": "read",
+        "approval": "always",
+        "classification": {
+          "source": "mcp_annotations",
+          "mcp_annotations": {
+            "readOnlyHint": true,
+            "openWorldHint": false
+          }
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": false,
+        "suggestion": {
+          "kind": "read",
+          "approval": "never"
+        }
+      }
+    },
+    {
+      "id": "annotations-write",
+      "description": "annotations say additive write",
+      "tool": {
+        "name": "calendar_book",
+        "kind": "write",
+        "approval": "always",
+        "classification": {
+          "source": "mcp_annotations",
+          "mcp_annotations": {
+            "readOnlyHint": false,
+            "destructiveHint": false,
+            "idempotentHint": true
+          }
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": false,
+        "suggestion": {
+          "kind": "write",
+          "approval": "always"
+        }
+      }
+    },
+    {
+      "id": "annotations-empty-defaults",
+      "description": "empty annotations: readOnlyHint defaults to false, so the suggestion is write",
+      "tool": {
+        "name": "webhook_call",
+        "kind": "write",
+        "approval": "always",
+        "classification": {
+          "source": "mcp_annotations",
+          "mcp_annotations": {}
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": false,
+        "suggestion": {
+          "kind": "write",
+          "approval": "always"
+        }
+      }
+    },
+    {
+      "id": "unclassified-declared-read",
+      "description": "declared read but unclassified: fail closed to write",
+      "tool": {
+        "name": "db_query",
+        "kind": "read",
+        "approval": "always",
+        "classification": {
+          "source": "unclassified"
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": false,
+        "suggestion": null
+      }
+    },
+    {
+      "id": "no-classification-declared-read",
+      "description": "no classification object: fail closed to write",
+      "tool": {
+        "name": "docs_fetch",
+        "kind": "read",
+        "approval": "always"
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": false,
+        "suggestion": null
+      }
+    },
+    {
+      "id": "unclassified-with-annotations",
+      "description": "unclassified with a read-only hint: suggestion read, effective write",
+      "tool": {
+        "name": "status_get",
+        "kind": "read",
+        "approval": "always",
+        "classification": {
+          "source": "unclassified",
+          "mcp_annotations": {
+            "title": "Get status",
+            "readOnlyHint": true
+          }
+        }
+      },
+      "expect": {
+        "effective_kind": "write",
+        "operator_classified": false,
+        "suggestion": {
+          "kind": "read",
+          "approval": "never"
+        }
+      }
+    }
+  ]
+}

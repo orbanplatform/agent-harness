@@ -9,7 +9,7 @@
     {
       "name": "agent-harness",
       "source": "./",
-      "description": "Design agent recipe bundles that conform to the Agent Harness Profile 0.1.",
+      "description": "Design agent template bundles that conform to the Agent Harness Profile 0.2.",
       "category": "development",
       "homepage": "https://github.com/orbanplatform/agent-harness",
       "license": "Apache-2.0"

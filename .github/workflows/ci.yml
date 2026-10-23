@@ -30,7 +30,7 @@ jobs:
           cache: npm
       - name: Install pinned dev dependencies
         run: npm ci --ignore-scripts
-      - name: Test vectors, L1 on examples/*, fixtures in test-vectors/0.1/recipes
+      - name: Test vectors, L1 on examples/*, fixtures in test-vectors/0.2/templates
         run: npm test
 
   python-tools:
@@ -50,7 +50,7 @@ jobs:
       - name: Load every agent.json with pyagentspec 26.3.1
         run: |
           cat > "$RUNNER_TEMP/load_agents.py" <<'EOF'
-          """Load every recipe agent.json with pyagentspec 26.3.1 (required for an L1 claim)."""
+          """Load every template agent.json with pyagentspec 26.3.1 (required for an L1 claim)."""
           import glob
           import pathlib
           import sys
@@ -59,13 +59,13 @@ jobs:
           from pyagentspec.llms import OpenAiCompatibleConfig
           from pyagentspec.serialization import AgentSpecDeserializer
 
-          paths = sorted(glob.glob("examples/*/agent.json")) + sorted(glob.glob("test-vectors/0.1/recipes/*/agent.json"))
+          paths = sorted(glob.glob("examples/*/agent.json")) + sorted(glob.glob("test-vectors/0.2/templates/*/agent.json"))
           if not paths:
               print("WARN  agent.pyagentspec  no agent.json files found")
           failed = False
           for path in paths:
               text = pathlib.Path(path).read_text(encoding="utf-8")
-              # Recipes reference the deployer's model as {"$component_ref": "llm"}
+              # Templates reference the deployer's model as {"$component_ref": "llm"}
               # (disaggregated configuration); a placeholder is supplied at load time.
               llm = OpenAiCompatibleConfig(id="llm", name="deployer-llm", model_id="deployer-defined", url="https://llm.example.com/v1")
               try:

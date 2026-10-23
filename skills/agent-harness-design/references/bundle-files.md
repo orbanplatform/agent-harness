@@ -1,10 +1,10 @@
 # Bundle files, field by field
 
-A recipe bundle is one directory:
+A template bundle is one directory:
 
 ```
-<recipe-id>/
-  recipe.json
+<template-id>/
+  template.json
   agent.json
   harness.json
   policy.cedar
@@ -12,8 +12,8 @@ A recipe bundle is one directory:
   skills/<skill-name>/SKILL.md
 ```
 
-`<recipe-id>` uses lowercase letters, digits, and hyphens (2 to 63 characters).
-The JSON Schemas in `schemas/0.1/` are authoritative; this page summarizes them.
+`<template-id>` uses lowercase letters, digits, and hyphens (2 to 63 characters).
+The JSON Schemas in `schemas/0.2/` are authoritative; this page summarizes them.
 
 ## agent.json (Oracle Agent Spec 26.3.1)
 
@@ -40,7 +40,7 @@ Agent Spec serialization exactly:
   tools, `false` for read tools).
 - Tool names may use letters, digits, `_`, `-`, and `.` (for example
   `mail_send`). Some model providers do not accept `.` in function names; the
-  runtime maps names if needed, the recipe keeps the canonical name.
+  runtime maps names if needed, the template keeps the canonical name.
 - Also include `toolboxes: []`, `human_in_the_loop: true`, and
   `transforms: []` so the document matches what Agent Spec 26.3.1 serializers
   produce.
@@ -85,7 +85,7 @@ recipient from the record. Inputs named in `limit.field` must exist on the tool.
 
 | Path | Required | Values and rules |
 |---|---|---|
-| `$schema` | Recommended | `https://orbanplatform.com/agent-harness/schemas/0.1/harness.schema.json` |
+| `$schema` | Recommended | `https://orbanplatform.com/agent-harness/schemas/0.2/harness.schema.json` |
 | `profile_version` | Required | `"0.1.0"` |
 | `agent_ref` | Required | The Agent `id` in `agent.json` |
 | `role.title` | Required | Job title |
@@ -135,9 +135,9 @@ See [policy-and-acceptance.md](policy-and-acceptance.md).
 
 | Path | Required | Values and rules |
 |---|---|---|
-| `$schema` | Recommended | `https://orbanplatform.com/agent-harness/schemas/0.1/acceptance.schema.json` |
+| `$schema` | Recommended | `https://orbanplatform.com/agent-harness/schemas/0.2/acceptance.schema.json` |
 | `profile_version` | Required | `"0.1.0"` |
-| `recipe_id` | Required | `recipe.json` `id` |
+| `template_id` | Required | `template.json` `id` |
 | `samples[].id` | Required | Unique |
 | `samples[].description` | Recommended | What the sample checks |
 | `samples[].input` | Required | Task text, or a list of chat messages |
@@ -175,18 +175,18 @@ Step-by-step instructions, examples, and edge cases.
 - Keep it under 500 lines; it should repeat the untrusted-data rule for the data
   the skill handles.
 
-## recipe.json
+## template.json
 
 | Path | Required | Values and rules |
 |---|---|---|
-| `$schema` | Recommended | `https://orbanplatform.com/agent-harness/schemas/0.1/recipe.schema.json` |
-| `profile` | Required | `https://orbanplatform.com/agent-harness/0.1` |
+| `$schema` | Recommended | `https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json` |
+| `profile` | Required | `https://orbanplatform.com/agent-harness/0.2` |
 | `profile_version` | Required | `"0.1.0"` |
 | `id` | Required | `^[a-z0-9][a-z0-9-]{1,62}$`, usually the directory name |
 | `title` | Required | Short title |
 | `summary` | Required | At most 500 characters |
 | `locale` | Required | BCP 47 tag of the bundle's text |
-| `files[]` | Required | `role`, `path`, `standard`, `sha256` for every file except `recipe.json` |
+| `files[]` | Required | `role`, `path`, `standard`, `sha256` for every file except `template.json` |
 | `provenance` | Required | `generated_by` (`human` or the tool name), `reviewed_by_human` (true only if a person reviewed the whole bundle), `created` (RFC 3339) |
 
 File entries:
@@ -194,9 +194,9 @@ File entries:
 | role | path | standard |
 |---|---|---|
 | agent | `agent.json` | `agentspec@26.3.1` |
-| harness | `harness.json` | `agent-harness@0.1.0` |
+| harness | `harness.json` | `agent-harness@0.2.0` |
 | policy | `policy.cedar` | `cedar@4` |
-| acceptance | `acceptance.json` | `agent-harness@0.1.0` |
+| acceptance | `acceptance.json` | `agent-harness@0.2.0` |
 | skill | `skills/<name>/SKILL.md` | `agentskills` |
 
 Set `reviewed_by_human` to `false` for a bundle you generated; the user changes

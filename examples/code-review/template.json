@@ -1,0 +1,46 @@
+{
+  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json",
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.2.0",
+  "id": "code-review",
+  "title": "Code review: comment on pull requests",
+  "summary": "Reviews one pull request for Example Co.: reads the change and its CI results and posts review comments after a maintainer approves each one. It never merges, pushes, approves, or changes repository settings.",
+  "locale": "en",
+  "files": [
+    {
+      "role": "agent",
+      "path": "agent.json",
+      "standard": "agentspec@26.3.1",
+      "sha256": "ef378b94e5dcdcad125df46d01eaa402018d6ba282bec4ef0cac5807701e42eb"
+    },
+    {
+      "role": "harness",
+      "path": "harness.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "0ea8a07d17cb10e7a621689ffda45dc156a4ff19cbcc812a2403dd5f40a711d1"
+    },
+    {
+      "role": "policy",
+      "path": "policy.cedar",
+      "standard": "cedar@4",
+      "sha256": "2d56d6adfbe2e122d062e0dbfca865cc5567ab9360f07e8fb949beda75aca818"
+    },
+    {
+      "role": "acceptance",
+      "path": "acceptance.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "522cc5e0d6d7a1700d34030cc3dfdbb8ee0fb8a177c7a3a74bd48ba3a6805b79"
+    },
+    {
+      "role": "skill",
+      "path": "skills/review-comments/SKILL.md",
+      "standard": "agentskills",
+      "sha256": "8ec68f8a7751234da8aba3f192fdfde2fd1c0de1d05863b0a46ff025f252bdda"
+    }
+  ],
+  "provenance": {
+    "generated_by": "Claude Code",
+    "reviewed_by_human": false,
+    "created": "2026-10-23T04:20:00Z"
+  }
+}

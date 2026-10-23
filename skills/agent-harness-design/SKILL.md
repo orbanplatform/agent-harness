@@ -1,16 +1,16 @@
 ---
 name: agent-harness-design
-description: Turns a short description of an AI agent's job into a complete recipe bundle that conforms to the Agent Harness Profile 0.1 (recipe.json, an Oracle Agent Spec 26.3.1 agent.json, harness.json with six chapters, a Cedar policy, acceptance samples including a prompt-injection sample, and Agent Skills). Use when someone asks to design, specify, scaffold, review, or fix an agent harness, agent recipe, tool permissions, human approval rules, or acceptance tests for an agent, or mentions agent-harness, harness.json, or recipe bundles.
+description: Turns a short description of an AI agent's job into a complete template bundle that conforms to the Agent Harness Profile 0.2 (template.json, an Oracle Agent Spec 26.3.1 agent.json, harness.json with six chapters, a Cedar policy, acceptance samples including a prompt-injection sample, and Agent Skills). Use when someone asks to design, specify, scaffold, review, or fix an agent harness, agent template, tool permissions, human approval rules, or acceptance tests for an agent, or mentions agent-harness, harness.json, or template bundles.
 license: Apache-2.0
 metadata:
-  profile: "https://orbanplatform.com/agent-harness/0.1"
+  profile: "https://orbanplatform.com/agent-harness/0.2"
   profile-version: "0.1.0"
 ---
 
 # Agent harness design
 
 Use this skill to turn a one-paragraph request ("an agent that answers website
-enquiries and drafts replies") into a recipe bundle that conforms to the Agent
+enquiries and drafts replies") into a template bundle that conforms to the Agent
 Harness Profile 0.1. The bundle describes the agent's job, its tool permissions,
 the human approvals it needs, and how to test it. It contains no code.
 
@@ -23,20 +23,20 @@ The profile composes existing standards. Do not invent replacements for them:
 | `policy.cedar` | Cedar 4 | Default deny. Write tools need an approval bound to the call's arguments. |
 | `acceptance.json` | This profile (field names follow UK AISI Inspect `Sample`) | At least six samples, including a prompt-injection sample. |
 | `skills/<name>/SKILL.md` | Agent Skills (agentskills.io) | Instruction-only. No `scripts/`. |
-| `recipe.json` | This profile | Manifest with a SHA-256 digest of every file. |
+| `template.json` | This profile | Manifest with a SHA-256 digest of every file. |
 
 If the repository you are working in contains `spec/agent-harness-profile.md`
-and `schemas/0.1/`, those files are authoritative. Read them when a rule below
+and `schemas/0.2/`, those files are authoritative. Read them when a rule below
 seems ambiguous, and follow them if they differ from this skill. The
 `examples/` directory of the profile repository has three complete bundles to
 compare against.
 
 ## Safety rules for this skill
 
-- Write only inside the recipe directory the user agreed on. Do not edit the
+- Write only inside the template directory the user agreed on. Do not edit the
   settings, permission files, or hooks of any coding tool (for example
   `~/.claude/settings.json`, `.claude/settings.json`, `.codex/config.toml`,
-  `hooks/hooks.json`). A recipe describes permissions for the agent it defines;
+  `hooks/hooks.json`). A template describes permissions for the agent it defines;
   it never grants permissions to the tool you are running in.
 - Do not download or run binaries, installers, or scripts from the internet.
   Use validators only if they are already installed or present in the
@@ -66,7 +66,7 @@ Follow these steps in order and keep a checklist in your reply.
    `kind`, `approval`, and `limit`, and get confirmation before writing files.
 4. **Write the files** in this order: `agent.json`, `harness.json`,
    `policy.cedar`, `skills/<name>/SKILL.md`, `acceptance.json`, and
-   `recipe.json` last. Field-by-field guidance is in
+   `template.json` last. Field-by-field guidance is in
    [references/bundle-files.md](references/bundle-files.md).
 5. **Compute digests last**, after every other file is final (see "Digests").
 6. **Validate** (see "Validation") and fix every reported problem.
@@ -141,7 +141,7 @@ Rules that always apply:
 ## Cedar policy pattern
 
 `policy.cedar` is validated in strict mode against the profile's Cedar schema
-(`schemas/0.1/harness.cedarschema`, namespace `OrbanHarness`) extended with one
+(`schemas/0.2/harness.cedarschema`, namespace `OrbanHarness`) extended with one
 action per `harness.json` tool. Entity types are `Agent`, `Human`, `Tool`; the
 context is `{ approval: { granted, decision_id, enforced_identity },
 arguments_digest, run_id, task_id }`. Cedar denies every request that no
@@ -171,7 +171,7 @@ when {
 
 Then add an explicit `forbid` for each `boundaries.never` item that this
 vocabulary can express, with a comment quoting the item. Policies may name only
-the recipe's own tool actions, so a `never` item about an action the agent has
+the template's own tool actions, so a `never` item about an action the agent has
 no tool for (merge, push, pay) is covered by default deny: say so in a comment
 instead of inventing an action. Items about content (for example "never quote
 a price that is not in the price list") stay in `harness.json` and in the
@@ -201,7 +201,7 @@ sample. Use only fictional names and `example.com`, `example.org`, or
 
 ## Digests
 
-`recipe.json` lists every file with its `role`, `path`, `standard`, and
+`template.json` lists every file with its `role`, `path`, `standard`, and
 `sha256`: the lowercase hex SHA-256 of the file bytes exactly as stored.
 Compute digests only after every other file is final, because any later edit
 changes them:
@@ -219,10 +219,10 @@ recompute its digest.
 
 Run what is available, in this order, and report each result verbatim:
 
-1. `node scripts/conformance.mjs l1 <recipe-dir>` if the repository contains
+1. `node scripts/conformance.mjs l1 <template-dir>` if the repository contains
    `scripts/conformance.mjs`. It checks the schemas, digests, lint rules, and
    the Cedar policy. Fix every error and run it again until it passes.
-2. `skills-ref validate <recipe-dir>/skills/<name>` if the Agent Skills
+2. `skills-ref validate <template-dir>/skills/<name>` if the Agent Skills
    reference validator is already installed.
 3. Loading `agent.json` with pyagentspec 26.3.1, if it is already installed,
    supplying the deployer's LLM configuration under the key `llm` through
@@ -239,6 +239,6 @@ If a validator is not available, say so instead of claiming the check passed.
 - Classifying a tool as `read` because its MCP annotation says so.
 - A write tool with `approval: "never"`, or `over_limit` without `limit`.
 - A Cedar `permit` for a write tool without the `enforced_identity` check, or a
-  policy that names an action that is not one of the recipe's tools.
+  policy that names an action that is not one of the template's tools.
 - An injection sample that checks only the final text and not the tool calls.
 - Editing a file after computing digests.

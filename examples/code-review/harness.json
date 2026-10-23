@@ -1,6 +1,6 @@
 {
-  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.1/harness.schema.json",
-  "profile_version": "0.1.0",
+  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.2/harness.schema.json",
+  "profile_version": "0.2.0",
   "agent_ref": "code-reviewer",
   "role": {
     "title": "Code reviewer",

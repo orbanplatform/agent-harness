@@ -1,0 +1,46 @@
+{
+  "$schema": "https://orbanplatform.com/agent-harness/schemas/0.2/template.schema.json",
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.2.0",
+  "id": "reception-enquiry",
+  "title": "Reception: answer website enquiries",
+  "summary": "Reads enquiries from the Example Co. website contact form, looks up prices and open appointment slots, and drafts replies. Every reply is sent only after a human approves its exact text, and only to the sender recorded on the enquiry.",
+  "locale": "en",
+  "files": [
+    {
+      "role": "agent",
+      "path": "agent.json",
+      "standard": "agentspec@26.3.1",
+      "sha256": "b264b0be3d410f693ccdc6ced5a9706819bb3815f40adf26cef79400c4d6c8a6"
+    },
+    {
+      "role": "harness",
+      "path": "harness.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "be7b877541eb57f7184a06f748744369b5e36b8098ce1624789520a92679a774"
+    },
+    {
+      "role": "policy",
+      "path": "policy.cedar",
+      "standard": "cedar@4",
+      "sha256": "654ed2e394c0fe9217466722e384b7b259f4812474fa907543a2ba4948d1dc44"
+    },
+    {
+      "role": "acceptance",
+      "path": "acceptance.json",
+      "standard": "agent-harness@0.2.0",
+      "sha256": "1ef133e17b8c42319c50cfa32d632fac077d75adf1cd4e474d994c2a58bc0783"
+    },
+    {
+      "role": "skill",
+      "path": "skills/reception-reply/SKILL.md",
+      "standard": "agentskills",
+      "sha256": "bee0387bf4e35e9735b24f12eb7b3898fe3fd307a681605a677eb46ddaabfa2f"
+    }
+  ],
+  "provenance": {
+    "generated_by": "Claude Code",
+    "reviewed_by_human": false,
+    "created": "2026-10-23T04:20:00Z"
+  }
+}

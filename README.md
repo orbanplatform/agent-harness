@@ -1,8 +1,8 @@
 # Agent Harness Profile
 
-**Status: Draft, version 0.1.0.** Every section may change before 1.0.
+**Status: Draft, version 0.2.0.** Every section may change before 1.0.
 
-Teams that put an AI agent to work for an organization keep asking Claude Code or Codex to build the same harness from scratch: which tools the agent may call, which actions a person must approve first, how to avoid sending the same email twice after a retry, what to log, and how to test it. Each result is different, and none of them can be checked by anyone else. The Agent Harness Profile is a written standard for that harness. It reuses existing specifications from major vendors and foundations wherever one exists, and defines only what is missing: approval records bound to the exact arguments of an action, an exactly-once write ledger, a verifiable audit format, and acceptance tests. An agent described this way is a *recipe bundle* that people can review, sign, exchange and check with a conformance runner.
+Teams that put an AI agent to work for an organization keep asking Claude Code or Codex to build the same harness from scratch: which tools the agent may call, which actions a person must approve first, how to avoid sending the same email twice after a retry, what to log, and how to test it. Each result is different, and none of them can be checked by anyone else. The Agent Harness Profile is a written standard for that harness. It reuses existing specifications from major vendors and foundations wherever one exists, and defines only what is missing: approval records bound to the exact arguments of an action, an exactly-once write ledger, a verifiable audit format, and acceptance tests. An agent described this way is a *template bundle* that people can review, sign, exchange and check with a conformance runner.
 
 Read the specification: [spec/agent-harness-profile.md](spec/agent-harness-profile.md)
 
@@ -23,11 +23,11 @@ Read the specification: [spec/agent-harness-profile.md](spec/agent-harness-profi
 
 Section 4 of the specification lists every standard with its pinned version and status.
 
-## The recipe bundle
+## The template bundle
 
 ```
 reception-enquiry/
-  recipe.json              manifest: every file with its SHA-256 digest
+  template.json              manifest: every file with its SHA-256 digest
   agent.json               Oracle Agent Spec 26.3.1 agent, unmodified
   harness.json             role, knowledge, tool permissions, work steps,
                            boundaries and approvals, model requirements and budget
@@ -40,7 +40,7 @@ Three complete examples are in [examples/](examples/): `reception-enquiry`, `ap-
 
 ## Quick start
 
-### Check a recipe bundle
+### Check a template bundle
 
 Requires Node.js 22 or later.
 
@@ -55,9 +55,9 @@ node scripts/conformance.mjs vectors   # reference implementation against all te
 npm test                               # everything CI runs
 ```
 
-### Design a recipe with the skill
+### Design a template with the skill
 
-The repository includes an Agent Skill, `agent-harness-design`, that interviews you about an agent's job and writes a recipe bundle. It is instruction-only: it writes files in the recipe directory you choose and does not change your agent settings.
+The repository includes an Agent Skill, `agent-harness-design`, that interviews you about an agent's job and writes a template bundle. It is instruction-only: it writes files in the template directory you choose and does not change your agent settings.
 
 Claude Code, from a terminal:
 
@@ -86,7 +86,7 @@ or inside Codex, open `/plugins` and install `agent-harness`.
 
 | Level | Applies to | Meaning |
 |---|---|---|
-| **L1 Describe** | Recipe bundles | Every file validates against its schema, every digest matches, the lint rules pass, the skills pass `skills-ref validate`, and `agent.json` loads in `pyagentspec` 26.3.1. |
+| **L1 Describe** | Template bundles | Every file validates against its schema, every digest matches, the lint rules pass, the skills pass `skills-ref validate`, and `agent.json` loads in `pyagentspec` 26.3.1. |
 | **L2 Gate** | Harnesses | Unclassified tools are treated as writes, writes wait for approval, Cedar denies by default, approvals are bound to the exact arguments, agents never approve, and a timeout is a deny. |
 | **L3 Prove** | Harnesses | Exactly-once write ledger, hash-chained audit events, RFC 9162 Merkle root and signed checkpoints that a third party can verify. |
 
@@ -96,12 +96,12 @@ Conformance is self-assessed with the runner and test vectors in this repository
 
 ```
 spec/agent-harness-profile.md   the specification
-schemas/0.1/                    JSON Schemas (2020-12) and the Cedar schema
+schemas/0.2/                    JSON Schemas (2020-12) and the Cedar schema
 reference/                      reference implementation, zero runtime dependencies
-test-vectors/0.1/               test vectors and bundles that must fail L1
+test-vectors/0.2/               test vectors and bundles that must fail L1
 scripts/conformance.mjs         conformance runner
-examples/                       example recipe bundles
-skills/agent-harness-design/    Agent Skill for designing recipes
+examples/                       example template bundles
+skills/agent-harness-design/    Agent Skill for designing templates
 ```
 
 ## Contributing

@@ -1,5 +1,5 @@
-// Recipe: code-review (Agent Harness Profile 0.1)
-// Cedar schema: schemas/0.1/harness.cedarschema, namespace OrbanHarness.
+// Template: code-review (Agent Harness Profile 0.2)
+// Cedar schema: schemas/0.2/harness.cedarschema, namespace OrbanHarness.
 // Cedar denies every request that no permit allows, so tools and actions not
 // listed here are denied.
 

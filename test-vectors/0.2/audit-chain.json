@@ -1,0 +1,1505 @@
+{
+  "profile": "https://orbanplatform.com/agent-harness/0.2",
+  "profile_version": "0.1.0",
+  "title": "Audit chain, RFC 9162 Merkle tree hash and C2SP signed checkpoint",
+  "generated_by": "reference/*.mjs via `node scripts/conformance.mjs vectors --write`",
+  "sources": [
+    "https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/formats/json-format.md",
+    "https://www.rfc-editor.org/rfc/rfc8785",
+    "https://www.rfc-editor.org/rfc/rfc9162#section-2.1.1",
+    "https://c2sp.org/signed-note@v1.1.0",
+    "https://c2sp.org/tlog-checkpoint@v1.1.0",
+    "https://github.com/transparency-dev/merkle/blob/c39fbf350a405f68571bf4c42a6a518eb0a46a4b/testonly/constants.go (Apache-2.0)"
+  ],
+  "test_key": {
+    "label": "TEST ONLY. Published seed; anyone can sign with it. Never trust this key outside test vectors.",
+    "algorithm": "Ed25519 (RFC 8032), C2SP signed-note signature type 0x01",
+    "seed_hex": "c68ac85ce0bf66795b6575b6eec1c77fc27bd2777d398982d151b9819c87efa2",
+    "seed_derivation": "SHA-256(\"agent-harness 0.2 TEST ONLY audit log signing seed\")",
+    "key_name": "example.com/agent-harness-test-log",
+    "public_key_hex": "bf5c622e2f7510dacec0f7a96099a49c26ec12784e4fac781ed7e65436a4cadb",
+    "key_id_hex": "b0ba6cfc",
+    "vkey": "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+  },
+  "hmac_test_material": {
+    "label": "TEST ONLY. Per-record HMAC-SHA-256 used for data.reason_hmac in evt-0003. Real per-record HMAC material is kept off-chain and destroyed on erasure; it is derived here only so the vector is reproducible.",
+    "derivation": "HMAC-SHA-256 with K = SHA-256(UTF-8 bytes of input_utf8) over UTF-8 bytes of message",
+    "input_utf8": "agent-harness 0.2 TEST ONLY HMAC material for record apr-0001",
+    "message": "Checked the price against the list.",
+    "hmac_sha256_hex": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182"
+  },
+  "chain": {
+    "source": "urn:orban-harness:unit:example",
+    "genesis_prevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "notes": [
+      "event hash = lowercase hex SHA-256(JCS(event)) over the whole event, including orbanprevhash.",
+      "sequence starts at 00000000000000000001 and increases by one per event of the source.",
+      "arguments_digest = lowercase hex SHA-256(JCS(arguments))."
+    ],
+    "arguments": {
+      "enquiry_id": "enq-0001",
+      "subject": "Re: Price of the annual service plan",
+      "body": "Thank you for your enquiry. The annual service plan costs 120.00 USD per year (price list effective 2026-10-01). Kind regards, Example Co. Reception"
+    },
+    "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+    "inputs": [
+      {
+        "id": "evt-0001",
+        "type": "com.orbanplatform.harness.run.started",
+        "time": "2026-10-23T01:00:00Z",
+        "recordedtime": "2026-10-23T01:00:00.120Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        "subject": "task-0001",
+        "data": {
+          "run_id": "run-0001",
+          "task_id": "task-0001",
+          "agent_id": "reception",
+          "trigger": "event"
+        }
+      },
+      {
+        "id": "evt-0002",
+        "type": "com.orbanplatform.harness.approval.requested",
+        "time": "2026-10-23T01:00:05Z",
+        "recordedtime": "2026-10-23T01:00:05.080Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01",
+        "subject": "task-0001",
+        "data": {
+          "approval_request_id": "apr-0001",
+          "run_id": "run-0001",
+          "task_id": "task-0001",
+          "tool": "mail_send",
+          "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "idempotency_key": "task-0001:mail_send:1",
+          "routing_path": "named",
+          "expires_at": "2026-10-30T01:00:05Z"
+        }
+      },
+      {
+        "id": "evt-0003",
+        "type": "com.orbanplatform.harness.approval.decided",
+        "time": "2026-10-23T01:12:40Z",
+        "recordedtime": "2026-10-23T01:12:40.310Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01",
+        "subject": "task-0001",
+        "data": {
+          "approval_request_id": "apr-0001",
+          "decision": "approve",
+          "decided_by": "principal:p-0002",
+          "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "channel": "console",
+          "decided_by_dispatcher": false,
+          "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+          "reason_ref": "vault:example.com/records/apr-0001/reason"
+        }
+      },
+      {
+        "id": "evt-0004",
+        "type": "com.orbanplatform.harness.action.executed",
+        "time": "2026-10-23T01:12:41Z",
+        "recordedtime": "2026-10-23T01:12:41.500Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01",
+        "subject": "task-0001",
+        "data": {
+          "tool": "mail_send",
+          "idempotency_key": "task-0001:mail_send:1",
+          "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "approval_request_id": "apr-0001",
+          "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+        }
+      },
+      {
+        "id": "evt-0005",
+        "type": "com.orbanplatform.harness.action.replayed",
+        "time": "2026-10-23T01:12:59Z",
+        "recordedtime": "2026-10-23T01:12:59.010Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01",
+        "subject": "task-0001",
+        "data": {
+          "tool": "mail_send",
+          "idempotency_key": "task-0001:mail_send:1",
+          "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "replayed_event_id": "evt-0004"
+        }
+      },
+      {
+        "id": "evt-0006",
+        "type": "com.orbanplatform.harness.run.completed",
+        "time": "2026-10-23T01:13:02Z",
+        "recordedtime": "2026-10-23T01:13:02.200Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        "subject": "task-0001",
+        "data": {
+          "run_id": "run-0001",
+          "task_id": "task-0001",
+          "outcome": "succeeded"
+        }
+      },
+      {
+        "id": "evt-0007",
+        "type": "com.orbanplatform.harness.record.redacted",
+        "time": "2026-11-20T09:00:00Z",
+        "recordedtime": "2026-11-20T09:00:00.050Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01",
+        "subject": "task-0001",
+        "data": {
+          "target_event_id": "evt-0003",
+          "target_field": "data.reason_hmac",
+          "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+          "basis": "erasure_request"
+        }
+      }
+    ],
+    "events": [
+      {
+        "specversion": "1.0",
+        "id": "evt-0001",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.run.started",
+        "time": "2026-10-23T01:00:00Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "run_id": "run-0001",
+          "task_id": "task-0001",
+          "agent_id": "reception",
+          "trigger": "event"
+        },
+        "sequence": "00000000000000000001",
+        "orbanprevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-10-23T01:00:00.120Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+      },
+      {
+        "specversion": "1.0",
+        "id": "evt-0002",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.approval.requested",
+        "time": "2026-10-23T01:00:05Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "approval_request_id": "apr-0001",
+          "run_id": "run-0001",
+          "task_id": "task-0001",
+          "tool": "mail_send",
+          "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "idempotency_key": "task-0001:mail_send:1",
+          "routing_path": "named",
+          "expires_at": "2026-10-30T01:00:05Z"
+        },
+        "sequence": "00000000000000000002",
+        "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-10-23T01:00:05.080Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+      },
+      {
+        "specversion": "1.0",
+        "id": "evt-0003",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.approval.decided",
+        "time": "2026-10-23T01:12:40Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "approval_request_id": "apr-0001",
+          "decision": "approve",
+          "decided_by": "principal:p-0002",
+          "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "channel": "console",
+          "decided_by_dispatcher": false,
+          "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+          "reason_ref": "vault:example.com/records/apr-0001/reason"
+        },
+        "sequence": "00000000000000000003",
+        "orbanprevhash": "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-10-23T01:12:40.310Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01"
+      },
+      {
+        "specversion": "1.0",
+        "id": "evt-0004",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.action.executed",
+        "time": "2026-10-23T01:12:41Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "tool": "mail_send",
+          "idempotency_key": "task-0001:mail_send:1",
+          "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "approval_request_id": "apr-0001",
+          "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+        },
+        "sequence": "00000000000000000004",
+        "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-10-23T01:12:41.500Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+      },
+      {
+        "specversion": "1.0",
+        "id": "evt-0005",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.action.replayed",
+        "time": "2026-10-23T01:12:59Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "tool": "mail_send",
+          "idempotency_key": "task-0001:mail_send:1",
+          "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+          "replayed_event_id": "evt-0004"
+        },
+        "sequence": "00000000000000000005",
+        "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-10-23T01:12:59.010Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+      },
+      {
+        "specversion": "1.0",
+        "id": "evt-0006",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.run.completed",
+        "time": "2026-10-23T01:13:02Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "run_id": "run-0001",
+          "task_id": "task-0001",
+          "outcome": "succeeded"
+        },
+        "sequence": "00000000000000000006",
+        "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-10-23T01:13:02.200Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+      },
+      {
+        "specversion": "1.0",
+        "id": "evt-0007",
+        "source": "urn:orban-harness:unit:example",
+        "type": "com.orbanplatform.harness.record.redacted",
+        "time": "2026-11-20T09:00:00Z",
+        "datacontenttype": "application/json",
+        "data": {
+          "target_event_id": "evt-0003",
+          "target_field": "data.reason_hmac",
+          "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+          "basis": "erasure_request"
+        },
+        "sequence": "00000000000000000007",
+        "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+        "orbanalg": "sha256-jcs-v1",
+        "subject": "task-0001",
+        "recordedtime": "2026-11-20T09:00:00.050Z",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+      }
+    ],
+    "event_hashes": [
+      "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+      "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+      "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+      "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+      "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+      "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+      "20046534513f63243243a6d810463c68e5527ab8b004077d67329ab490738360"
+    ],
+    "head_hash": "20046534513f63243243a6d810463c68e5527ab8b004077d67329ab490738360"
+  },
+  "merkle": {
+    "notes": [
+      "Leaves are JCS(event_i) in sequence order; leaf hash SHA-256(0x00 || leaf), node hash SHA-256(0x01 || left || right)."
+    ],
+    "roots": [
+      {
+        "tree_size": 0,
+        "root_hex": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "tree_size": 1,
+        "root_hex": "063834f91a7aa823b53c94e72bf915a40c3e250c006cf1b7477b7265178e76df"
+      },
+      {
+        "tree_size": 2,
+        "root_hex": "f337b65383fe1e73294e0783db3c2420c7a31f6a5a2ca50cc781d551929471c7"
+      },
+      {
+        "tree_size": 3,
+        "root_hex": "ffaf4498826dc23ffd553dc2c05bde00f6100692d415a3ad06c2576031dcc822"
+      },
+      {
+        "tree_size": 4,
+        "root_hex": "3d853e4c65fbc555ea9c757faa1bc56aeaf2952de6007a87deebebaa930af823"
+      },
+      {
+        "tree_size": 5,
+        "root_hex": "86051726a7aef16497b56f6135842179f303fad319d294aa08c8c9fe7a5a0287"
+      },
+      {
+        "tree_size": 6,
+        "root_hex": "db9bfa1bd35ed2fbe6821c8593b2446305724574833b3b68999e0d8f8abc44e3"
+      },
+      {
+        "tree_size": 7,
+        "root_hex": "f527dc71a46603083aec2522881581604892d246e2e7d25219ef019940541778"
+      }
+    ],
+    "known_answer": {
+      "source": "transparency-dev/merkle testonly/constants.go (RFC 6962 hashing, identical to RFC 9162 section 2.1.1)",
+      "leaves_hex": [
+        "",
+        "00",
+        "10",
+        "2021",
+        "3031",
+        "40414243",
+        "5051525354555657",
+        "606162636465666768696a6b6c6d6e6f"
+      ],
+      "roots_hex": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+        "fac54203e7cc696cf0dfcb42c92a1d9dbaf70ad9e621f4bd8d98662f00e3c125",
+        "aeb6bcfe274b70a14fb067a5e5578264db0fa9b51af5e0ba159158f329e06e77",
+        "d37ee418976dd95753c1c73862b9398fa2a2cf9b4ff0fdfe8b30cd95209614b7",
+        "4e3bbb1f7b478dcfe71fb631631519a3bca12c9aefca1612bfce4c13a86264d4",
+        "76e67dadbcdf1e10e1b74ddc608abd2f98dfb16fbce75277b5232a127f2087ef",
+        "ddb89be403809e325750d3d263cd78929c2942b7942a34b77e122c9594a74c8c",
+        "5dc9da79a70659a9ad559cb701ded9a2ab9d823aad2f4960cfe370eff4604328"
+      ]
+    }
+  },
+  "checkpoint": {
+    "origin": "example.com/agent-harness-test-log",
+    "tree_size": 7,
+    "root_hex": "f527dc71a46603083aec2522881581604892d246e2e7d25219ef019940541778",
+    "root_base64": "9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=",
+    "text": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n",
+    "signed_note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+    "vkey": "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+  },
+  "signed_note_known_answer": {
+    "source": "c2sp.org/signed-note@v1.1.0, Verifier keys, Example",
+    "vkey": "example.com/foo+530d903a+AekyeRrm56hApGFkyQR4ZCbV54Id2LKaANYcrnKv3U2k",
+    "note": "This is an example message.\n\n— example.com/foo Uw2QOkn8srV1yJGh2VYRlL1Tnagv1YEq6TfXppzi2ONncAlTgK7Ztg1ERYNZXsYjOBH3mFXmRKuwHjG1Yu72IneyaQM=\n",
+    "expect_text": "This is an example message.\n"
+  },
+  "chain_negative": [
+    {
+      "id": "tampered-data",
+      "description": "data of event index 3 changed after the fact",
+      "events": [
+        {
+          "specversion": "1.0",
+          "id": "evt-0001",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.started",
+          "time": "2026-10-23T01:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "agent_id": "reception",
+            "trigger": "event"
+          },
+          "sequence": "00000000000000000001",
+          "orbanprevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:00.120Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0002",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.requested",
+          "time": "2026-10-23T01:00:05Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "tool": "mail_send",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "idempotency_key": "task-0001:mail_send:1",
+            "routing_path": "named",
+            "expires_at": "2026-10-30T01:00:05Z"
+          },
+          "sequence": "00000000000000000002",
+          "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:05.080Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0003",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.decided",
+          "time": "2026-10-23T01:12:40Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "decision": "approve",
+            "decided_by": "principal:p-0002",
+            "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "channel": "console",
+            "decided_by_dispatcher": false,
+            "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+            "reason_ref": "vault:example.com/records/apr-0001/reason"
+          },
+          "sequence": "00000000000000000003",
+          "orbanprevhash": "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:40.310Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0004",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.executed",
+          "time": "2026-10-23T01:12:41Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_delete",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "approval_request_id": "apr-0001",
+            "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+          },
+          "sequence": "00000000000000000004",
+          "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:41.500Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0005",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.replayed",
+          "time": "2026-10-23T01:12:59Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "replayed_event_id": "evt-0004"
+          },
+          "sequence": "00000000000000000005",
+          "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:59.010Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0006",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.completed",
+          "time": "2026-10-23T01:13:02Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "outcome": "succeeded"
+          },
+          "sequence": "00000000000000000006",
+          "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:13:02.200Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0007",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.record.redacted",
+          "time": "2026-11-20T09:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "target_event_id": "evt-0003",
+            "target_field": "data.reason_hmac",
+            "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+            "basis": "erasure_request"
+          },
+          "sequence": "00000000000000000007",
+          "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-11-20T09:00:00.050Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "first_error_index": 4,
+        "errors": [
+          {
+            "index": 4,
+            "code": "broken_link"
+          }
+        ]
+      }
+    },
+    {
+      "id": "removed-event",
+      "description": "event index 2 deleted",
+      "events": [
+        {
+          "specversion": "1.0",
+          "id": "evt-0001",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.started",
+          "time": "2026-10-23T01:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "agent_id": "reception",
+            "trigger": "event"
+          },
+          "sequence": "00000000000000000001",
+          "orbanprevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:00.120Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0002",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.requested",
+          "time": "2026-10-23T01:00:05Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "tool": "mail_send",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "idempotency_key": "task-0001:mail_send:1",
+            "routing_path": "named",
+            "expires_at": "2026-10-30T01:00:05Z"
+          },
+          "sequence": "00000000000000000002",
+          "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:05.080Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0004",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.executed",
+          "time": "2026-10-23T01:12:41Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "approval_request_id": "apr-0001",
+            "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+          },
+          "sequence": "00000000000000000004",
+          "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:41.500Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0005",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.replayed",
+          "time": "2026-10-23T01:12:59Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "replayed_event_id": "evt-0004"
+          },
+          "sequence": "00000000000000000005",
+          "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:59.010Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0006",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.completed",
+          "time": "2026-10-23T01:13:02Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "outcome": "succeeded"
+          },
+          "sequence": "00000000000000000006",
+          "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:13:02.200Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0007",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.record.redacted",
+          "time": "2026-11-20T09:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "target_event_id": "evt-0003",
+            "target_field": "data.reason_hmac",
+            "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+            "basis": "erasure_request"
+          },
+          "sequence": "00000000000000000007",
+          "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-11-20T09:00:00.050Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "first_error_index": 2,
+        "errors": [
+          {
+            "index": 2,
+            "code": "bad_sequence"
+          },
+          {
+            "index": 2,
+            "code": "broken_link"
+          },
+          {
+            "index": 3,
+            "code": "bad_sequence"
+          },
+          {
+            "index": 4,
+            "code": "bad_sequence"
+          },
+          {
+            "index": 5,
+            "code": "bad_sequence"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reordered-events",
+      "description": "events index 4 and 5 swapped",
+      "events": [
+        {
+          "specversion": "1.0",
+          "id": "evt-0001",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.started",
+          "time": "2026-10-23T01:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "agent_id": "reception",
+            "trigger": "event"
+          },
+          "sequence": "00000000000000000001",
+          "orbanprevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:00.120Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0002",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.requested",
+          "time": "2026-10-23T01:00:05Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "tool": "mail_send",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "idempotency_key": "task-0001:mail_send:1",
+            "routing_path": "named",
+            "expires_at": "2026-10-30T01:00:05Z"
+          },
+          "sequence": "00000000000000000002",
+          "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:05.080Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0003",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.decided",
+          "time": "2026-10-23T01:12:40Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "decision": "approve",
+            "decided_by": "principal:p-0002",
+            "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "channel": "console",
+            "decided_by_dispatcher": false,
+            "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+            "reason_ref": "vault:example.com/records/apr-0001/reason"
+          },
+          "sequence": "00000000000000000003",
+          "orbanprevhash": "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:40.310Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0004",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.executed",
+          "time": "2026-10-23T01:12:41Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "approval_request_id": "apr-0001",
+            "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+          },
+          "sequence": "00000000000000000004",
+          "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:41.500Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0006",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.completed",
+          "time": "2026-10-23T01:13:02Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "outcome": "succeeded"
+          },
+          "sequence": "00000000000000000006",
+          "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:13:02.200Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0005",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.replayed",
+          "time": "2026-10-23T01:12:59Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "replayed_event_id": "evt-0004"
+          },
+          "sequence": "00000000000000000005",
+          "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:59.010Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0007",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.record.redacted",
+          "time": "2026-11-20T09:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "target_event_id": "evt-0003",
+            "target_field": "data.reason_hmac",
+            "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+            "basis": "erasure_request"
+          },
+          "sequence": "00000000000000000007",
+          "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-11-20T09:00:00.050Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "first_error_index": 4,
+        "errors": [
+          {
+            "index": 4,
+            "code": "bad_sequence"
+          },
+          {
+            "index": 4,
+            "code": "broken_link"
+          },
+          {
+            "index": 5,
+            "code": "bad_sequence"
+          },
+          {
+            "index": 5,
+            "code": "broken_link"
+          },
+          {
+            "index": 6,
+            "code": "broken_link"
+          }
+        ]
+      }
+    },
+    {
+      "id": "bad-genesis",
+      "description": "first event does not link to the genesis hash",
+      "events": [
+        {
+          "specversion": "1.0",
+          "id": "evt-0001",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.started",
+          "time": "2026-10-23T01:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "agent_id": "reception",
+            "trigger": "event"
+          },
+          "sequence": "00000000000000000001",
+          "orbanprevhash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:00.120Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0002",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.requested",
+          "time": "2026-10-23T01:00:05Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "tool": "mail_send",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "idempotency_key": "task-0001:mail_send:1",
+            "routing_path": "named",
+            "expires_at": "2026-10-30T01:00:05Z"
+          },
+          "sequence": "00000000000000000002",
+          "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:05.080Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0003",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.decided",
+          "time": "2026-10-23T01:12:40Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "decision": "approve",
+            "decided_by": "principal:p-0002",
+            "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "channel": "console",
+            "decided_by_dispatcher": false,
+            "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+            "reason_ref": "vault:example.com/records/apr-0001/reason"
+          },
+          "sequence": "00000000000000000003",
+          "orbanprevhash": "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:40.310Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0004",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.executed",
+          "time": "2026-10-23T01:12:41Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "approval_request_id": "apr-0001",
+            "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+          },
+          "sequence": "00000000000000000004",
+          "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:41.500Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0005",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.replayed",
+          "time": "2026-10-23T01:12:59Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "replayed_event_id": "evt-0004"
+          },
+          "sequence": "00000000000000000005",
+          "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:59.010Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0006",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.completed",
+          "time": "2026-10-23T01:13:02Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "outcome": "succeeded"
+          },
+          "sequence": "00000000000000000006",
+          "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:13:02.200Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0007",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.record.redacted",
+          "time": "2026-11-20T09:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "target_event_id": "evt-0003",
+            "target_field": "data.reason_hmac",
+            "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+            "basis": "erasure_request"
+          },
+          "sequence": "00000000000000000007",
+          "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-11-20T09:00:00.050Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "first_error_index": 0,
+        "errors": [
+          {
+            "index": 0,
+            "code": "broken_link"
+          },
+          {
+            "index": 1,
+            "code": "broken_link"
+          }
+        ]
+      }
+    },
+    {
+      "id": "wrong-alg",
+      "description": "orbanalg of event index 0 is not sha256-jcs-v1",
+      "events": [
+        {
+          "specversion": "1.0",
+          "id": "evt-0001",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.started",
+          "time": "2026-10-23T01:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "agent_id": "reception",
+            "trigger": "event"
+          },
+          "sequence": "00000000000000000001",
+          "orbanprevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "orbanalg": "sha256-jcs-v2",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:00.120Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0002",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.requested",
+          "time": "2026-10-23T01:00:05Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "tool": "mail_send",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "idempotency_key": "task-0001:mail_send:1",
+            "routing_path": "named",
+            "expires_at": "2026-10-30T01:00:05Z"
+          },
+          "sequence": "00000000000000000002",
+          "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:05.080Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0003",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.decided",
+          "time": "2026-10-23T01:12:40Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "decision": "approve",
+            "decided_by": "principal:p-0002",
+            "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "channel": "console",
+            "decided_by_dispatcher": false,
+            "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+            "reason_ref": "vault:example.com/records/apr-0001/reason"
+          },
+          "sequence": "00000000000000000003",
+          "orbanprevhash": "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:40.310Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0004",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.executed",
+          "time": "2026-10-23T01:12:41Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "approval_request_id": "apr-0001",
+            "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+          },
+          "sequence": "00000000000000000004",
+          "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:41.500Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0005",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.replayed",
+          "time": "2026-10-23T01:12:59Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "replayed_event_id": "evt-0004"
+          },
+          "sequence": "00000000000000000005",
+          "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:59.010Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0006",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.completed",
+          "time": "2026-10-23T01:13:02Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "outcome": "succeeded"
+          },
+          "sequence": "00000000000000000006",
+          "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:13:02.200Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0007",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.record.redacted",
+          "time": "2026-11-20T09:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "target_event_id": "evt-0003",
+            "target_field": "data.reason_hmac",
+            "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+            "basis": "erasure_request"
+          },
+          "sequence": "00000000000000000007",
+          "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-11-20T09:00:00.050Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "first_error_index": 0,
+        "errors": [
+          {
+            "index": 0,
+            "code": "bad_alg"
+          },
+          {
+            "index": 1,
+            "code": "broken_link"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mixed-source",
+      "description": "event index 6 has a different source",
+      "events": [
+        {
+          "specversion": "1.0",
+          "id": "evt-0001",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.started",
+          "time": "2026-10-23T01:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "agent_id": "reception",
+            "trigger": "event"
+          },
+          "sequence": "00000000000000000001",
+          "orbanprevhash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:00.120Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0002",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.requested",
+          "time": "2026-10-23T01:00:05Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "tool": "mail_send",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "idempotency_key": "task-0001:mail_send:1",
+            "routing_path": "named",
+            "expires_at": "2026-10-30T01:00:05Z"
+          },
+          "sequence": "00000000000000000002",
+          "orbanprevhash": "97b8a54a4f25bebddc42cb64d04cc4c1469ff33545204ee463cee57a53dd2364",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:00:05.080Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-53995c3f42cd8ad8-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0003",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.approval.decided",
+          "time": "2026-10-23T01:12:40Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "approval_request_id": "apr-0001",
+            "decision": "approve",
+            "decided_by": "principal:p-0002",
+            "enforced_identity": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "channel": "console",
+            "decided_by_dispatcher": false,
+            "reason_hmac": "af07841999d039c74ac544a38504b511307ca366b53560043b96d31e96b9b182",
+            "reason_ref": "vault:example.com/records/apr-0001/reason"
+          },
+          "sequence": "00000000000000000003",
+          "orbanprevhash": "0399fa0ff5fed71a60e2e17438dfe32997504391fb1e1fa28964d615033d249c",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:40.310Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-a2fb4a1d1a96d312-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0004",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.executed",
+          "time": "2026-10-23T01:12:41Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "approval_request_id": "apr-0001",
+            "result_digest": "b9374c3f4149217d20327cebd242d9da4dec094cd9e1714e2ab15504cb97a13a"
+          },
+          "sequence": "00000000000000000004",
+          "orbanprevhash": "eea16700b769c5ac3d9b07f941dea4cd204f27c566285a119db1964d1659d068",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:41.500Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-0e1f2a3b4c5d6e7f-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0005",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.action.replayed",
+          "time": "2026-10-23T01:12:59Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "tool": "mail_send",
+            "idempotency_key": "task-0001:mail_send:1",
+            "arguments_digest": "cb251adb8f24d30b9611c29660a40b39895fa777e1be2a07c78086c77cdad73f",
+            "replayed_event_id": "evt-0004"
+          },
+          "sequence": "00000000000000000005",
+          "orbanprevhash": "5dea4f6778b469ff89779940a080cedb89678a6fd7ebc1df0122d7dcb13d14cb",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:12:59.010Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-1a2b3c4d5e6f7a8b-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0006",
+          "source": "urn:orban-harness:unit:example",
+          "type": "com.orbanplatform.harness.run.completed",
+          "time": "2026-10-23T01:13:02Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "run_id": "run-0001",
+            "task_id": "task-0001",
+            "outcome": "succeeded"
+          },
+          "sequence": "00000000000000000006",
+          "orbanprevhash": "c4aaa8c99903ce133d670fae768aeed9ac5e2e481a9792f29b2bf9624b8d2231",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-10-23T01:13:02.200Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+        },
+        {
+          "specversion": "1.0",
+          "id": "evt-0007",
+          "source": "urn:orban-harness:unit:other",
+          "type": "com.orbanplatform.harness.record.redacted",
+          "time": "2026-11-20T09:00:00Z",
+          "datacontenttype": "application/json",
+          "data": {
+            "target_event_id": "evt-0003",
+            "target_field": "data.reason_hmac",
+            "destroyed_key_ref": "vault:example.com/keys/apr-0001",
+            "basis": "erasure_request"
+          },
+          "sequence": "00000000000000000007",
+          "orbanprevhash": "eb350a62e7046a0a2e2270579b72bcb8d2d03da369e1169f1f84251a9ad3c0de",
+          "orbanalg": "sha256-jcs-v1",
+          "subject": "task-0001",
+          "recordedtime": "2026-11-20T09:00:00.050Z",
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-9f8e7d6c5b4a3928-01"
+        }
+      ],
+      "expect": {
+        "valid": false,
+        "first_error_index": 6,
+        "errors": [
+          {
+            "index": 6,
+            "code": "source_mismatch"
+          }
+        ]
+      }
+    }
+  ],
+  "checkpoint_negative": [
+    {
+      "id": "tampered-tree-size",
+      "description": "tree size line changed after signing",
+      "note": "example.com/agent-harness-test-log\n8\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "bad_signature"
+      }
+    },
+    {
+      "id": "tampered-root",
+      "description": "root hash line replaced after signing",
+      "note": "example.com/agent-harness-test-log\n7\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "bad_signature"
+      }
+    },
+    {
+      "id": "unknown-key-only",
+      "description": "verifier only knows an unrelated key",
+      "note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.org/unrelated-test-log+4b37146e+AcNaM8grl0DFXruFQ4Vnf5rKo8b/tk8mGKSj7GtA5BlN"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "no_known_signature"
+      }
+    },
+    {
+      "id": "same-name-other-key",
+      "description": "verifier knows a different key under the same name (key IDs differ, so the signature is from an unknown key)",
+      "note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b1bd11ec+AcNaM8grl0DFXruFQ4Vnf5rKo8b/tk8mGKSj7GtA5BlN"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "no_known_signature"
+      }
+    },
+    {
+      "id": "hyphen-instead-of-em-dash",
+      "description": "signature line starts with U+002D instead of U+2014",
+      "note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n- example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "malformed"
+      }
+    },
+    {
+      "id": "missing-blank-line",
+      "description": "no empty line between text and signatures",
+      "note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "malformed"
+      }
+    },
+    {
+      "id": "non-canonical-base64",
+      "description": "signature base64 has non-zero padding bits",
+      "note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wR=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "bad_base64"
+      }
+    },
+    {
+      "id": "origin-mismatch",
+      "description": "valid signature, but the verifier expects another log origin",
+      "note": "example.com/agent-harness-test-log\n7\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/PnlYXL8gbE9bnUrssEjwFVer1H+7iqumeNTmP/e+0+9yHrsjbKmaGgqZQT7desN/UAJXrpj13bjQvDLd3BW+wQ=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect_origin": "example.com/another-log",
+      "expect": {
+        "valid": false,
+        "error": "origin_mismatch"
+      }
+    },
+    {
+      "id": "tree-size-leading-zero",
+      "description": "validly signed, but the tree size has a leading zero",
+      "note": "example.com/agent-harness-test-log\n07\n9SfccaRmAwg67CUiiBWBYEiS0kbi59JSGe8BmUBUF3g=\n\n— example.com/agent-harness-test-log sLps/CPHSrbUojGoAAB7rx07RFbrbZ6wwhMSpvlqePul8BFIVt4fh5W4ggI+h39gDDkrCZJbT3d9Y3AYtNs0GVVQ2Q0=\n",
+      "vkeys": [
+        "example.com/agent-harness-test-log+b0ba6cfc+Ab9cYi4vdRDazsD3qWCZpJwm7BJ4Tk+seB7X5lQ2pMrb"
+      ],
+      "expect": {
+        "valid": false,
+        "error": "bad_checkpoint"
+      }
+    }
+  ]
+}
