@@ -1,0 +1,35 @@
+{
+  "name": "agent-harness",
+  "version": "0.1.0",
+  "description": "Design agent recipe bundles that conform to the Agent Harness Profile 0.1: an Oracle Agent Spec agent, tool permissions, human approvals, a Cedar policy, and acceptance tests.",
+  "author": {
+    "name": "Orban Platform Inc.",
+    "email": "contact@orbanplatform.com"
+  },
+  "homepage": "https://github.com/orbanplatform/agent-harness",
+  "repository": "https://github.com/orbanplatform/agent-harness",
+  "license": "Apache-2.0",
+  "keywords": [
+    "agent-harness",
+    "agent-spec",
+    "agent-skills",
+    "cedar",
+    "human-in-the-loop",
+    "approvals",
+    "acceptance-tests"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agent Harness",
+    "shortDescription": "Design agent recipe bundles",
+    "longDescription": "Turns a short description of an agent's job into a recipe bundle that conforms to the Agent Harness Profile 0.1: an Oracle Agent Spec 26.3.1 agent, tool classification, human approval rules, a Cedar policy, Agent Skills, and acceptance samples including a prompt-injection test. Instruction-only: it writes files in the recipe directory you choose and does not change your Codex settings.",
+    "developerName": "Orban Platform Inc.",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/orbanplatform/agent-harness",
+    "defaultPrompt": [
+      "Design an agent harness for a reception agent that answers website enquiries.",
+      "Review this recipe bundle against the Agent Harness Profile."
+    ]
+  }
+}

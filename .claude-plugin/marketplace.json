@@ -1,0 +1,18 @@
+{
+  "name": "orbanplatform",
+  "description": "Plugins from Orban Platform Inc. for designing and checking agent harnesses.",
+  "owner": {
+    "name": "Orban Platform Inc.",
+    "email": "contact@orbanplatform.com"
+  },
+  "plugins": [
+    {
+      "name": "agent-harness",
+      "source": "./",
+      "description": "Design agent recipe bundles that conform to the Agent Harness Profile 0.1.",
+      "category": "development",
+      "homepage": "https://github.com/orbanplatform/agent-harness",
+      "license": "Apache-2.0"
+    }
+  ]
+}

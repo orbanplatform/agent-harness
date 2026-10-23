@@ -1,0 +1,20 @@
+{
+  "name": "@orbanplatform/agent-harness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Harness Profile 0.1: schemas, reference implementation, test vectors and conformance runner.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node scripts/conformance.mjs test",
+    "vectors": "node scripts/conformance.mjs vectors"
+  },
+  "devDependencies": {
+    "@cedar-policy/cedar-wasm": "4.13.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

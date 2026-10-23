@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbanplatform.com/agent-harness/schemas/0.1/acceptance.schema.json",
+  "title": "Agent Harness Profile 0.1 acceptance samples (acceptance.json)",
+  "description": "Acceptance samples for a recipe. Sample field names follow UK AISI Inspect Sample (id, input, target, metadata, files, setup, sandbox, description); expect is the profile's machine-checkable addition. Vocabulary follows Anthropic, Demystifying evals for AI agents: a sample is a task, each run of it is a trial, a grader scores the transcript and outcome, pass@k and pass^k summarise trials. The conformance runner's lint rules add: at least one injection sample guarding every write tool, every write tool covered by an approvals_requested expectation, interruption samples bounding executions to at most one. Requirement levels in property descriptions follow the profile: Required, Conditionally Required, Recommended, Opt-In.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_version", "recipe_id", "samples"],
+  "properties": {
+    "$schema": {
+      "description": "Recommended. URI of this JSON Schema. When present it MUST be exactly this schema's $id.",
+      "const": "https://orbanplatform.com/agent-harness/schemas/0.1/acceptance.schema.json"
+    },
+    "profile_version": {
+      "description": "Required. Profile version (semver). MUST be 0.1.0.",
+      "const": "0.1.0"
+    },
+    "recipe_id": {
+      "description": "Required. id of the recipe (recipe.json id) these samples belong to.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}$"
+    },
+    "samples": {
+      "description": "Required. At least one sample. Sample ids are unique.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/sample" }
+    }
+  },
+  "$defs": {
+    "toolName": {
+      "description": "Tool name as in harness.json (ASCII letters, digits, _ and -, 1 to 64 characters).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "toolList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/toolName" }
+    },
+    "textList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1, "maxLength": 2000 }
+    },
+    "chatMessage": {
+      "description": "One chat message (Inspect ChatMessage subset).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "content"],
+      "properties": {
+        "role": { "description": "Required. Message role.", "enum": ["system", "user", "assistant", "tool"] },
+        "content": { "description": "Required. Message text.", "type": "string" }
+      }
+    },
+    "sample": {
+      "description": "One acceptance sample.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "input", "target", "metadata", "expect"],
+      "properties": {
+        "id": {
+          "description": "Required. Sample identifier, unique within the file (Inspect Sample.id).",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "description": {
+          "description": "Recommended. What the sample checks (Inspect Sample.description).",
+          "type": "string",
+          "maxLength": 2000
+        },
+        "input": {
+          "description": "Required. Task given to the agent: a string, or a list of chat messages (Inspect Sample.input).",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/chatMessage" } }
+          ]
+        },
+        "target": {
+          "description": "Required. What a correct outcome contains, as guidance for the grader: a string or a list of strings (Inspect Sample.target).",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          ]
+        },
+        "metadata": {
+          "description": "Required. Inspect Sample.metadata. scenario and grader are required; other keys are allowed (extension intended).",
+          "type": "object",
+          "required": ["scenario", "grader"],
+          "properties": {
+            "scenario": {
+              "description": "Required. Scenario class: baseline (normal case), missing_data, tool_error, human_edit (the approver edits before approving), interruption (the run stops and resumes mid-task), injection (untrusted input tries to redirect the agent).",
+              "enum": ["baseline", "missing_data", "tool_error", "human_edit", "interruption", "injection"]
+            },
+            "grader": {
+              "description": "Required. Primary grader type: code (deterministic checks on the transcript and outcome), model (model-based rubric), human.",
+              "enum": ["code", "model", "human"]
+            }
+          },
+          "additionalProperties": true
+        },
+        "files": {
+          "description": "Opt-In. Files made available to the sample, as a map of file name to inline content (Inspect Sample.files).",
+          "type": "object",
+          "propertyNames": { "pattern": "^(?!/)(?!.*\\.\\.)[A-Za-z0-9._/-]{1,256}$" },
+          "additionalProperties": { "type": "string" }
+        },
+        "setup": {
+          "description": "Opt-In. Setup instructions or script for the sandbox (Inspect Sample.setup). Recipes published under this profile SHOULD keep this declarative and MUST NOT ask users to download or run binaries.",
+          "type": "string"
+        },
+        "sandbox": {
+          "description": "Opt-In. Sandbox environment type for the sample (Inspect Sample.sandbox), for example docker.",
+          "type": "string",
+          "minLength": 1
+        },
+        "expect": {
+          "description": "Required. Machine-checkable expectations evaluated on each trial's transcript and outcome. Tool names MUST exist in harness.json.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "must_call": {
+              "description": "Opt-In. Tools that MUST be called (and, for gated tools, executed after approval) in the trial.",
+              "$ref": "#/$defs/toolList"
+            },
+            "must_not_call": {
+              "description": "Opt-In. Tools that MUST NOT be executed in the trial (no execution, whether or not approval was requested).",
+              "$ref": "#/$defs/toolList"
+            },
+            "approvals_requested": {
+              "description": "Opt-In. Tools for which an approval request MUST be created in the trial.",
+              "$ref": "#/$defs/toolList"
+            },
+            "must_ask": {
+              "description": "Opt-In. True if the agent MUST stop and ask or escalate to a human; false if it MUST NOT.",
+              "type": "boolean"
+            },
+            "outcome_includes": {
+              "description": "Opt-In. Strings or facts the final outcome MUST contain.",
+              "$ref": "#/$defs/textList"
+            },
+            "outcome_excludes": {
+              "description": "Opt-In. Strings or facts the final outcome MUST NOT contain.",
+              "$ref": "#/$defs/textList"
+            },
+            "forbidden_targets": {
+              "description": "Opt-In. Attacker-chosen targets (recipients, accounts, URLs) that MUST NOT appear in any tool call arguments or approval request in the trial. Use example.com, example.org or example.net values in published recipes.",
+              "$ref": "#/$defs/textList"
+            },
+            "max_executions": {
+              "description": "Opt-In. Upper bound on executions per tool in the trial, as a map of tool name to count. Interruption samples MUST bound each write tool they exercise to at most 1.",
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": { "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+              "additionalProperties": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+Agent Harness Profile
+Copyright 2026 Orban Platform Inc.
+
+This product includes software developed at Orban Platform Inc. (https://orbanplatform.com/).
+
+The specification text in spec/agent-harness-profile.md, the JSON Schemas,
+the test vectors and the reference code in this repository are licensed
+under the Apache License, Version 2.0. See LICENSE.

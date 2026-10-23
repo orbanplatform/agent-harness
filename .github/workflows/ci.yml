@@ -1,0 +1,110 @@
+# SPDX-License-Identifier: Apache-2.0
+# Every third-party action is pinned to a full commit SHA (tag in the comment).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: npm test (vectors, L1 on examples and fixtures)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Install pinned dev dependencies
+        run: npm ci --ignore-scripts
+      - name: Test vectors, L1 on examples/*, fixtures in test-vectors/0.1/recipes
+        run: npm test
+
+  python-tools:
+    name: Agent Spec loading and Agent Skills validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.21"
+          # sha256 of uv-x86_64-unknown-linux-gnu.tar.gz for uv 0.12.21
+          checksum: "23f02075b652bb1df64178cfae41b5caf160822e720e2663568f3f5d63bc52c0"
+          enable-cache: false
+      - name: Load every agent.json with pyagentspec 26.3.1
+        run: |
+          cat > "$RUNNER_TEMP/load_agents.py" <<'EOF'
+          """Load every recipe agent.json with pyagentspec 26.3.1 (required for an L1 claim)."""
+          import glob
+          import pathlib
+          import sys
+
+          from pyagentspec.agent import Agent
+          from pyagentspec.llms import OpenAiCompatibleConfig
+          from pyagentspec.serialization import AgentSpecDeserializer
+
+          paths = sorted(glob.glob("examples/*/agent.json")) + sorted(glob.glob("test-vectors/0.1/recipes/*/agent.json"))
+          if not paths:
+              print("WARN  agent.pyagentspec  no agent.json files found")
+          failed = False
+          for path in paths:
+              text = pathlib.Path(path).read_text(encoding="utf-8")
+              # Recipes reference the deployer's model as {"$component_ref": "llm"}
+              # (disaggregated configuration); a placeholder is supplied at load time.
+              llm = OpenAiCompatibleConfig(id="llm", name="deployer-llm", model_id="deployer-defined", url="https://llm.example.com/v1")
+              try:
+                  agent = AgentSpecDeserializer().from_json(text, components_registry={"llm": llm})
+                  if not isinstance(agent, Agent):
+                      raise TypeError(f"top-level component is {type(agent).__name__}, not Agent")
+                  print(f"PASS  agent.pyagentspec  {path} ({len(agent.tools)} tools)")
+              except Exception as exc:  # report every file, then fail
+                  failed = True
+                  print(f"FAIL  agent.pyagentspec  {path}: {type(exc).__name__}: {exc}")
+          sys.exit(1 if failed else 0)
+          EOF
+          uv run --no-project --python 3.12 --with pyagentspec==26.3.1 python -P "$RUNNER_TEMP/load_agents.py"
+      - name: Validate every SKILL.md with skills-ref 0.1.1
+        run: |
+          status=0
+          while IFS= read -r -d '' file; do
+            uvx --python 3.12 --from skills-ref==0.1.1 agentskills validate "$(dirname "$file")" || status=1
+          done < <(find . -name SKILL.md -not -path './node_modules/*' -not -path './.git/*' -print0 | sort -z)
+          exit "$status"
+
+  secret-scan:
+    name: Secret scan (gitleaks, full history)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks 8.30.1 (release tarball, sha256 pinned)
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          # from gitleaks_8.30.1_checksums.txt on the v8.30.1 release
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+      - name: Scan every commit
+        run: '"$RUNNER_TEMP/gitleaks" git --redact --no-banner --exit-code 1 .'

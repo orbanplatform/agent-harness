@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbanplatform.com/agent-harness/schemas/0.1/audit-event.schema.json",
+  "title": "Agent Harness Profile 0.1 audit event",
+  "description": "A CloudEvents 1.0.2 event in JSON format (application/cloudevents+json) with the profile's two extension attributes orbanprevhash and orbanalg, plus the documented CloudEvents extensions sequence, recordedtime and traceparent. Event hash = lowercase hex SHA-256(JCS(event)) over the whole event. Events MUST NOT contain raw personal data or raw free text from untrusted parties; use a keyed hash (HMAC-SHA-256, key kept off-chain) and a reference instead. Requirement levels in property descriptions follow the profile: Required, Conditionally Required, Recommended, Opt-In.",
+  "type": "object",
+  "required": ["specversion", "id", "source", "type", "time", "datacontenttype", "data", "sequence", "orbanprevhash", "orbanalg"],
+  "propertyNames": {
+    "description": "CloudEvents attribute names consist of lowercase ASCII letters and digits; the profile also enforces the CloudEvents SHOULD of at most 20 characters.",
+    "pattern": "^[a-z0-9]{1,20}$"
+  },
+  "properties": {
+    "specversion": {
+      "description": "Required. CloudEvents specification version. MUST be 1.0.",
+      "const": "1.0"
+    },
+    "id": {
+      "description": "Required. Event identifier, unique within source.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "source": {
+      "description": "Required. URI-reference identifying the audit log (one hash chain per source), for example urn:orban-harness:unit:example.",
+      "type": "string",
+      "minLength": 1,
+      "format": "uri-reference"
+    },
+    "type": {
+      "description": "Required. Event type under com.orbanplatform.harness. Defined in 0.1: run.started, run.completed, approval.requested, approval.decided, action.executed, action.replayed, policy.denied, record.redacted.",
+      "type": "string",
+      "pattern": "^com\\.orbanplatform\\.harness\\.[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+    },
+    "time": {
+      "description": "Required. RFC 3339 date-time at which the occurrence happened.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "description": "Required. MUST be application/json.",
+      "const": "application/json"
+    },
+    "dataschema": {
+      "description": "Opt-In. URI of the schema data adheres to (CloudEvents dataschema).",
+      "type": "string",
+      "format": "uri"
+    },
+    "subject": {
+      "description": "Opt-In. Subject of the event within source (CloudEvents subject), for example a task id. MUST NOT be personal data.",
+      "type": "string",
+      "minLength": 1
+    },
+    "data": {
+      "description": "Required. Event payload (JSON object). Contains identifiers, digests, keyed hashes and references, never raw personal data or raw untrusted free text.",
+      "type": "object"
+    },
+    "sequence": {
+      "description": "Required. CloudEvents sequence extension: decimal string zero-padded to 20 digits, starting at 00000000000000000001 and increasing by one per event of the same source, without gaps. The Merkle leaf index of an event is sequence minus 1.",
+      "type": "string",
+      "pattern": "^[0-9]{20}$"
+    },
+    "orbanprevhash": {
+      "description": "Required. Profile extension: lowercase hex SHA-256(JCS(previous event of the same source)), or 64 zeros for the first event.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "orbanalg": {
+      "description": "Required. Profile extension: hash construction identifier. MUST be sha256-jcs-v1.",
+      "const": "sha256-jcs-v1"
+    },
+    "recordedtime": {
+      "description": "Recommended. CloudEvents recordedtime extension: RFC 3339 date-time at which the event was recorded in the log.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "traceparent": {
+      "description": "Recommended. CloudEvents distributed tracing extension: W3C Trace Context Level 1 traceparent of the span in which the event was written.",
+      "type": "string",
+      "pattern": "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+    },
+    "tracestate": {
+      "description": "Opt-In. CloudEvents distributed tracing extension: W3C Trace Context tracestate.",
+      "type": "string",
+      "maxLength": 512
+    }
+  },
+  "additionalProperties": {
+    "description": "Opt-In. Other CloudEvents extension attributes (extension intended). Values use the CloudEvents JSON types for String, Integer and Boolean. They are covered by the event hash.",
+    "type": ["string", "integer", "boolean"]
+  }
+}

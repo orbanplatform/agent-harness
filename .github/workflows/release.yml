@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: Apache-2.0
+# Every third-party action is pinned to a full commit SHA (tag in the comment).
+# No Actions cache is used in this workflow.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: npm test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Install pinned dev dependencies
+        run: npm ci --ignore-scripts
+      - name: Test vectors, L1 on examples/*, fixtures in test-vectors/0.1/recipes
+        run: npm test
+
+  attest:
+    name: Attest examples and schemas
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: List subjects (every file in examples/*/ and schemas/0.1/*)
+        run: |
+          {
+            find examples -mindepth 2 -type f -print0 | sort -z | xargs -0 sha256sum
+            find schemas/0.1 -maxdepth 1 -type f -print0 | sort -z | xargs -0 sha256sum
+          } > "$RUNNER_TEMP/subjects.sha256"
+          cat "$RUNNER_TEMP/subjects.sha256"
+      # SLSA build provenance (default mode). Subject names are the repository
+      # paths; verify with: gh attestation verify <file> --repo orbanplatform/agent-harness
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-checksums: ${{ runner.temp }}/subjects.sha256

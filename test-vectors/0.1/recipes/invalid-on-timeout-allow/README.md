@@ -1,0 +1,1 @@
+Expected L1 failure: `harness.on-timeout-deny`. Why: `boundaries.approval.on_timeout` is `allow` (a valid ACS value), but the profile requires `deny`: an unanswered approval must never turn into a permit.

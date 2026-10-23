@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orbanplatform.com/agent-harness/schemas/0.1/approval-request.schema.json",
+  "title": "Agent Harness Profile 0.1 approval request",
+  "description": "A request for a human decision on one tool call with exactly these arguments. Created in state pending. Changed arguments require a new request. Requirement levels in property descriptions follow the profile: Required, Conditionally Required, Recommended, Opt-In.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "created_at", "expires_at", "requester", "tool", "arguments_digest", "idempotency_key", "summary", "routing", "policy_ref"],
+  "properties": {
+    "$schema": {
+      "description": "Opt-In. URI of this JSON Schema. When present it MUST be exactly this schema's $id.",
+      "const": "https://orbanplatform.com/agent-harness/schemas/0.1/approval-request.schema.json"
+    },
+    "id": {
+      "description": "Required. Unique, unguessable identifier of the request.",
+      "$ref": "#/$defs/identifier"
+    },
+    "created_at": {
+      "description": "Required. RFC 3339 date-time at which the request was created.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "description": "Required. RFC 3339 date-time at which the request expires (created_at plus timeout_seconds). A decision at or after this instant is invalid and the request becomes expired, which is treated as deny.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "requester": {
+      "description": "Required. The agent run that asks for approval. The requesting agent can never decide the request.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent_id", "run_id", "task_id"],
+      "properties": {
+        "agent_id": {
+          "description": "Required. Principal id of the requesting agent (the Agent Spec component id in agent.json, or the deployment's agent principal id).",
+          "$ref": "#/$defs/identifier"
+        },
+        "run_id": {
+          "description": "Required. Identifier of the agent run.",
+          "$ref": "#/$defs/identifier"
+        },
+        "task_id": {
+          "description": "Required. Identifier of the task the run works on. The idempotency key is bound to it.",
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "dispatcher": {
+      "description": "Conditionally Required: present whenever a human assigned the task. Principal id of the human who dispatched (assigned) the task; decisions by this principal are marked decided_by_dispatcher and are valid only if separation_of_duties.dispatcher_may_approve is true.",
+      "$ref": "#/$defs/identifier"
+    },
+    "tool": {
+      "description": "Required. The tool to be called.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind"],
+      "properties": {
+        "name": {
+          "description": "Required. Tool name as in agent.json and harness.json (ASCII letters, digits, _ and -, 1 to 64 characters).",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "kind": {
+          "description": "Required. Effective kind of the tool after classification.",
+          "enum": ["read", "write"]
+        }
+      }
+    },
+    "arguments_digest": {
+      "description": "Required. Lowercase hex SHA-256 of the RFC 8785 (JCS) canonical form of the tool arguments. This is the enforced_identity a decision MUST echo.",
+      "$ref": "#/$defs/hex64"
+    },
+    "idempotency_key": {
+      "description": "Required. Idempotency key of the write this request gates (draft-ietf-httpapi-idempotency-key-header-08). Execution happens at most once per key.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255,
+      "pattern": "^[\\x20-\\x7E]+$"
+    },
+    "summary": {
+      "description": "Required. Three plain sentences shown to the approver. Derived from trusted records; untrusted free text MUST NOT be copied in verbatim.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["done", "decide", "after"],
+      "properties": {
+        "done": {
+          "description": "Required. What has been done so far.",
+          "$ref": "#/$defs/sentence"
+        },
+        "decide": {
+          "description": "Required. What needs the approver's decision.",
+          "$ref": "#/$defs/sentence"
+        },
+        "after": {
+          "description": "Required. What happens after approval.",
+          "$ref": "#/$defs/sentence"
+        }
+      }
+    },
+    "routing": {
+      "description": "Required. Who may decide.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "approvers"],
+      "properties": {
+        "path": {
+          "description": "Required. How approvers were chosen: named (a specific person named by the recipe or deployment), list (any one of a list) or fallback (the fallback approvers because the named or listed ones were unavailable).",
+          "enum": ["named", "list", "fallback"]
+        },
+        "approvers": {
+          "description": "Required. Human principal ids that may decide. A decision by anyone else is invalid. Agent principals MUST NOT appear.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    "policy_ref": {
+      "description": "Required. Reference to the policy that produced the escalation, for example recipe id plus Cedar policy id (reception-enquiry#policy1) or a URI.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "hex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sentence": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    }
+  }
+}

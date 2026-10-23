@@ -1,0 +1,1 @@
+Expected L1 failure: `harness.requester-may-approve`. Why: `boundaries.separation_of_duties.requester_may_approve` is `true`; the profile requires `false` (the requester, and any agent principal, never approves).

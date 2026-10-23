@@ -1,0 +1,1 @@
+Expected L1 failure: `policy.write-gated`. Why: policy.cedar permits `ticket_reply` (approval `always`) with the over_limit pattern `!context.limit_exceeded || (...)`, so it is allowed without approval whenever the runtime reports no limit exceeded; that pattern is only for tools whose approval is `over_limit`.
